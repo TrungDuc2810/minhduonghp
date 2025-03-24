@@ -4,7 +4,6 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
 import com.example.TTTN.service.ProductService;
 import com.example.TTTN.utils.AppConstants;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
