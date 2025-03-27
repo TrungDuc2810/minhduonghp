@@ -1,0 +1,100 @@
+package com.example.TTTN.controller;
+
+import com.example.TTTN.payload.ListResponse;
+import com.example.TTTN.payload.PostDto;
+import com.example.TTTN.service.PostService;
+import com.example.TTTN.utils.AppConstants;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/api/posts")
+public class PostController {
+    private final PostService postService;
+
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
+
+    @PreAuthorize("hasRole('ADMIN_KD')")
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<PostDto> createPost(@RequestPart("post") PostDto postDto,
+                                              @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
+        try {
+            if (thumbnail != null && !thumbnail.isEmpty()) {
+                String thumbnailPath = uploadThumbnail(thumbnail);
+                postDto.setThumbnail(thumbnailPath);
+            }
+            return new ResponseEntity<>(postService.createPost(postDto), HttpStatus.CREATED);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+
+    }
+
+    public String uploadThumbnail(MultipartFile file) throws IOException {
+        String uploadDir = "D://OneDrive//blog-frontend//my-blog//public//img//";
+        File uploadDirFile = new File(uploadDir);
+        if (!uploadDirFile.exists()) {
+            uploadDirFile.mkdirs();
+        }
+
+        String fileName = file.getOriginalFilename();
+        String filePath = uploadDir + fileName;
+
+        File destinationFile = new File(filePath);
+        file.transferTo(destinationFile);
+
+        return "/img/" + fileName;
+    }
+
+    @GetMapping
+    public ListResponse<PostDto> getAllPosts(
+            @RequestParam(value = "pageNo", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir
+    ) {
+        return postService.getAllPosts(pageNo, pageSize, sortBy, sortDir);
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<PostDto> getPostById(@PathVariable(name = "id") long postId) {
+        return ResponseEntity.ok(postService.getPostById(postId));
+    }
+
+    @PreAuthorize("hasRole('ADMIN_KD')")
+    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<PostDto> updatePost(
+            @PathVariable(name = "id") long postId,
+            @RequestPart("post") PostDto postDto,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
+    ) {
+        try {
+            if (thumbnail != null && !thumbnail.isEmpty()) {
+                postDto.setThumbnail(uploadThumbnail(thumbnail));
+            }
+            PostDto updatedPost = postService.updatePost(postId, postDto);
+            return new ResponseEntity<>(updatedPost, HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN_KD')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deletePostById(@PathVariable(name = "id") long postId) {
+        postService.deletePostById(postId);
+        return new ResponseEntity<>("Post entity deleted successfully!!!", HttpStatus.OK);
+    }
+}
