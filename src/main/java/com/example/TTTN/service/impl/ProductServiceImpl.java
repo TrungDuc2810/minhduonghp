@@ -3,12 +3,14 @@ package com.example.TTTN.service.impl;
 import com.example.TTTN.entity.Product;
 import com.example.TTTN.entity.ProductType;
 import com.example.TTTN.entity.ProductUnit;
+import com.example.TTTN.entity.Warehouse;
 import com.example.TTTN.exception.ResourceNotFoundException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
 import com.example.TTTN.repository.ProductRepository;
 import com.example.TTTN.repository.ProductTypeRepository;
 import com.example.TTTN.repository.ProductUnitRepository;
+import com.example.TTTN.repository.WarehouseRepository;
 import com.example.TTTN.service.ProductService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,21 +27,46 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductTypeRepository productTypeRepository;
     private final ProductUnitRepository productUnitRepository;
+    private final WarehouseRepository warehouseRepository;
     private final ModelMapper mapper;
 
-    public ProductServiceImpl(ProductRepository productRepository, ModelMapper mapper, ProductTypeRepository productTypeRepository, ProductUnitRepository productUnitRepository) {
+    public ProductServiceImpl(ProductRepository productRepository,
+                              WarehouseRepository warehouseRepository,
+                              ProductTypeRepository productTypeRepository,
+                              ProductUnitRepository productUnitRepository,
+                              ModelMapper mapper) {
         this.productRepository = productRepository;
-        this.mapper = mapper;
         this.productTypeRepository = productTypeRepository;
         this.productUnitRepository = productUnitRepository;
+        this.warehouseRepository = warehouseRepository;
+        this.mapper = mapper;
     }
 
     private ProductDto mapToDto(Product product) {
-        return mapper.map(product, ProductDto.class);
+        ProductDto productDto = mapper.map(product, ProductDto.class);
+
+        if (product.getWarehouses() != null) {
+            productDto.setWarehouseIds(
+                    product.getWarehouses().stream()
+                            .map(Warehouse::getId)
+                            .collect(Collectors.toSet())
+            );
+        }
+        return productDto;
     }
 
     private Product mapToProduct(ProductDto productDto) {
-        return mapper.map(productDto, Product.class);
+        Product product = mapper.map(productDto, Product.class);
+
+        if (productDto.getWarehouseIds() != null) {
+            Set<Warehouse> warehouses = productDto.getWarehouseIds().stream()
+                    .map(id -> warehouseRepository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(id))))
+                    .collect(Collectors.toSet());
+            product.setWarehouses(warehouses);
+        }
+
+        return product;
     }
 
     @Override
@@ -49,9 +77,14 @@ public class ProductServiceImpl implements ProductService {
         ProductUnit productUnit = productUnitRepository.findById(productDto.getProductUnitId()).orElseThrow(() ->
                 new ResourceNotFoundException("Product unit", "id", String.valueOf(productDto.getProductUnitId())));
 
+        Set<Warehouse> warehouses = productDto.getWarehouseIds().stream()
+                .map(id -> warehouseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(id))))
+                .collect(Collectors.toSet());
+
         Product product = mapToProduct(productDto);
         product.setProductType(productType);
         product.setProductUnit(productUnit);
+        product.setWarehouses(warehouses);
 
         Product newProduct = productRepository.save(product);
 
@@ -86,9 +119,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDto updateProduct(ProductDto productDto, Long id) {
-        Product product = productRepository.findById(id).orElseThrow(()
-                -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+    public ProductDto updateProduct(ProductDto productDto, Long productId) {
+        Product product = productRepository.findById(productId).orElseThrow(()
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
 
         ProductType productType = productTypeRepository.findById(productDto.getProductTypeId()).orElseThrow(() ->
                 new ResourceNotFoundException("Product type", "id", String.valueOf(productDto.getProductTypeId())));
@@ -96,12 +129,18 @@ public class ProductServiceImpl implements ProductService {
         ProductUnit productUnit = productUnitRepository.findById(productDto.getProductUnitId()).orElseThrow(() ->
                 new ResourceNotFoundException("Product unit", "id", String.valueOf(productDto.getProductUnitId())));
 
+        Set<Warehouse> warehouses = productDto.getWarehouseIds().stream()
+                .map(id -> warehouseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(id))))
+                .collect(Collectors.toSet());
+
         product.setName(productDto.getName());
         product.setDescription(productDto.getDescription());
         product.setPrice(productDto.getPrice());
         product.setQuantity(productDto.getQuantity());
         product.setProductType(productType);
         product.setProductUnit(productUnit);
+        product.setWarehouses(warehouses);
+        System.out.println(product);
 
         Product updatedProduct = productRepository.save(product);
 

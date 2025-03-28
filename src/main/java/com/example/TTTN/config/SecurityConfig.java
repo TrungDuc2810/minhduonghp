@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .csrf().disable()  // Có thể bật nếu cần bảo vệ CSRF
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()  // Cho phép không cần xác thực với các request auth
-                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET).permitAll()
                         .anyRequest().authenticated()  // Các request khác cần xác thực
                 )
                 .sessionManagement(session -> session
