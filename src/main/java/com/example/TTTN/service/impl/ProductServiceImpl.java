@@ -140,7 +140,6 @@ public class ProductServiceImpl implements ProductService {
         product.setProductType(productType);
         product.setProductUnit(productUnit);
         product.setWarehouses(warehouses);
-        System.out.println(product);
 
         Product updatedProduct = productRepository.save(product);
 

@@ -10,9 +10,10 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentDto {
+public class InvoiceDto {
     private long id;
-    private double paymentAmount;
-    private String paymentDate;
+    private double moneyAmount;
+    private String createdAt;
     private long partnerId;
+    private long invoiceTypeId;
 }

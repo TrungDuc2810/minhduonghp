@@ -1,6 +1,5 @@
 package com.example.TTTN.payload;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,13 +9,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PartnerDto {
+public class OrderTypeDto {
     private long id;
-    @NotEmpty
     private String name;
-    private String address;
-    private String phone;
-    private String email;
-    private double debt;
-    private long partnerTypeId;
 }

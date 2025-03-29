@@ -13,20 +13,23 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "payments")
-public class Payment {
+@Table(name = "invoices")
+public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "payment_amount")
-    private double paymentAmount;
-    @Column(name = "payment_date")
-    private String paymentDate;
+    @Column(name = "money_amount")
+    private double moneyAmount;
+    @Column(name = "created_at")
+    private String createdAt;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partner_id", nullable = false)
     private Partner partner;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_type_id", nullable = false)
+    private InvoiceType invoiceType;
     @PrePersist
     protected void onCreate() {
-        this.paymentDate = LocalDateTime.now().toString();
+        this.createdAt = LocalDateTime.now().toString();
     }
 }
