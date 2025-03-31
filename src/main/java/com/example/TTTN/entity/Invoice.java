@@ -28,6 +28,9 @@ public class Invoice {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_type_id", nullable = false)
     private InvoiceType invoiceType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now().toString();

@@ -1,7 +1,10 @@
 package com.example.TTTN.service;
 
 import com.example.TTTN.payload.ListResponse;
+import com.example.TTTN.payload.OrderDetailDto;
 import com.example.TTTN.payload.OrderDto;
+
+import java.util.List;
 
 public interface OrderService {
     OrderDto createOrder(OrderDto orderDto);

@@ -16,4 +16,5 @@ public class InvoiceDto {
     private String createdAt;
     private long partnerId;
     private long invoiceTypeId;
+    private long orderId;
 }

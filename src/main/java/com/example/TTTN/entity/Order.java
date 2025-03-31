@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -30,6 +32,12 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "order_type_id", nullable = false)
     private OrderType orderType;
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Invoice> invoices;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderDetail> orderDetails;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now().toString();
+    }
 }

@@ -2,6 +2,7 @@ package com.example.TTTN.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.Set;
 
 @Entity
 @Setter
@@ -16,4 +17,6 @@ public class Warehouse {
     private long id;
     @Column(name = "name")
     private String name;
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<WarehouseProduct> warehouseProducts;
 }

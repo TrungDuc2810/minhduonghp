@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.List;
 
 @Setter
 @Getter
@@ -19,5 +19,6 @@ public class OrderDto {
     private long partnerId;
     private long orderStatusId;
     private long orderTypeId;
-    private Set<OrderDetailDto> orderDetails;
+    private List<InvoiceDto> invoices;
+    private List<OrderDetailDto> orderDetails;
 }

@@ -28,9 +28,10 @@ public class SecurityConfig {
                 .cors().and()  // Bật lại CORS
                 .csrf().disable()  // Có thể bật nếu cần bảo vệ CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // Cho phép không cần xác thực với các request auth
-                        .requestMatchers(HttpMethod.GET).permitAll()
-                        .anyRequest().authenticated()  // Các request khác cần xác thực
+//                        .requestMatchers("/api/auth/**").permitAll()  // Cho phép không cần xác thực với các request auth
+//                        .requestMatchers(HttpMethod.GET).permitAll()
+//                        .anyRequest().authenticated()  // Các request khác cần xác thực
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Sử dụng JWT nên không cần session

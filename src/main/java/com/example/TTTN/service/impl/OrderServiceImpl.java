@@ -12,6 +12,7 @@ import com.example.TTTN.repository.OrderStatusRepository;
 import com.example.TTTN.repository.OrderTypeRepository;
 import com.example.TTTN.repository.PartnerRepository;
 import com.example.TTTN.service.OrderService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,7 +46,17 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto createOrder(OrderDto orderDto) {
+        OrderStatus orderStatus = orderStatusRepository.findByName("Chưa thanh toán");
+        orderDto.setOrderStatusId(orderStatus.getId());
+        orderDto.setPaidMoney(0);
+
+        Partner partner = partnerRepository.findById(orderDto.getPartnerId()).orElseThrow(()
+                -> new ResourceNotFoundException("Partner", "id", String.valueOf(orderDto.getPartnerId())));
+        partner.setDebt(partner.getDebt() + orderDto.getTotalMoney());
+        partnerRepository.save(partner);
+
         Order order = mapToEntity(orderDto);
         return mapToDto(orderRepository.save(order));
     }
@@ -83,18 +94,34 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto updateOrder(long orderId, OrderDto orderDto) {
-        Order order = orderRepository.findById(orderId).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(orderId)));
+        if (orderDto.getTotalMoney() < orderDto.getPaidMoney()) {
+            throw new IllegalArgumentException("Tổng giá trị đơn hàng không thể nhỏ hơn tổng tiền đã trả.");
+        }
 
-        Partner partner = partnerRepository.findById(orderDto.getPartnerId()).orElseThrow(()
-                -> new ResourceNotFoundException("Partner", "id", String.valueOf(orderDto.getPartnerId())));
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(orderId)));
 
-        OrderStatus orderStatus = orderStatusRepository.findById(orderDto.getOrderStatusId()).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(orderDto.getOrderStatusId())));
+        Partner partner = partnerRepository.findById(orderDto.getPartnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Partner", "id", String.valueOf(orderDto.getPartnerId())));
 
-        OrderType orderType = orderTypeRepository.findById(orderDto.getOrderTypeId()).orElseThrow(()
-                -> new ResourceNotFoundException("Partner", "id", String.valueOf(orderDto.getOrderTypeId())));
+        OrderType orderType = orderTypeRepository.findById(orderDto.getOrderTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order type", "id", String.valueOf(orderDto.getOrderTypeId())));
+
+        String statusName = orderDto.getPaidMoney() == 0.0 ? "Chưa thanh toán" :
+                orderDto.getPaidMoney() < orderDto.getTotalMoney() ? "Thanh toán một phần" :
+                        "Đã thanh toán";
+
+        OrderStatus orderStatus = orderStatusRepository.findByName(statusName);
+        if (orderStatus == null) {
+            throw new ResourceNotFoundException("Order status", "name", statusName);
+        }
+
+        double oldDebt = order.getTotalMoney() - order.getPaidMoney();
+        double newDebt = orderDto.getTotalMoney() - orderDto.getPaidMoney();
+        partner.setDebt(partner.getDebt() - oldDebt + newDebt);
+        partnerRepository.save(partner);
 
         order.setTotalMoney(orderDto.getTotalMoney());
         order.setPaidMoney(orderDto.getPaidMoney());
@@ -103,9 +130,9 @@ public class OrderServiceImpl implements OrderService {
         order.setPartner(partner);
 
         orderRepository.save(order);
-
         return mapToDto(order);
     }
+
 
     @Override
     public void deleteOrderById(long orderId) {

@@ -1,16 +1,10 @@
 package com.example.TTTN.service.impl;
 
-import com.example.TTTN.entity.Product;
-import com.example.TTTN.entity.ProductType;
-import com.example.TTTN.entity.ProductUnit;
-import com.example.TTTN.entity.Warehouse;
+import com.example.TTTN.entity.*;
 import com.example.TTTN.exception.ResourceNotFoundException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
-import com.example.TTTN.repository.ProductRepository;
-import com.example.TTTN.repository.ProductTypeRepository;
-import com.example.TTTN.repository.ProductUnitRepository;
-import com.example.TTTN.repository.WarehouseRepository;
+import com.example.TTTN.repository.*;
 import com.example.TTTN.service.ProductService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -19,76 +13,36 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
+    private final ModelMapper modelMapper;
     private final ProductTypeRepository productTypeRepository;
     private final ProductUnitRepository productUnitRepository;
-    private final WarehouseRepository warehouseRepository;
-    private final ModelMapper mapper;
 
     public ProductServiceImpl(ProductRepository productRepository,
-                              WarehouseRepository warehouseRepository,
+                              ModelMapper modelMapper,
                               ProductTypeRepository productTypeRepository,
-                              ProductUnitRepository productUnitRepository,
-                              ModelMapper mapper) {
+                              ProductUnitRepository productUnitRepository) {
         this.productRepository = productRepository;
+        this.modelMapper = modelMapper;
         this.productTypeRepository = productTypeRepository;
         this.productUnitRepository = productUnitRepository;
-        this.warehouseRepository = warehouseRepository;
-        this.mapper = mapper;
     }
 
     private ProductDto mapToDto(Product product) {
-        ProductDto productDto = mapper.map(product, ProductDto.class);
-
-        if (product.getWarehouses() != null) {
-            productDto.setWarehouseIds(
-                    product.getWarehouses().stream()
-                            .map(Warehouse::getId)
-                            .collect(Collectors.toSet())
-            );
-        }
-        return productDto;
+        return modelMapper.map(product, ProductDto.class);
     }
 
-    private Product mapToProduct(ProductDto productDto) {
-        Product product = mapper.map(productDto, Product.class);
-
-        if (productDto.getWarehouseIds() != null) {
-            Set<Warehouse> warehouses = productDto.getWarehouseIds().stream()
-                    .map(id -> warehouseRepository.findById(id)
-                            .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(id))))
-                    .collect(Collectors.toSet());
-            product.setWarehouses(warehouses);
-        }
-
-        return product;
+    private Product mapToEntity(ProductDto productDto) {
+        return modelMapper.map(productDto, Product.class);
     }
 
     @Override
     public ProductDto addProduct(ProductDto productDto) {
-        ProductType productType = productTypeRepository.findById(productDto.getProductTypeId()).orElseThrow(() ->
-                new ResourceNotFoundException("Product type", "id", String.valueOf(productDto.getProductTypeId())));
-
-        ProductUnit productUnit = productUnitRepository.findById(productDto.getProductUnitId()).orElseThrow(() ->
-                new ResourceNotFoundException("Product unit", "id", String.valueOf(productDto.getProductUnitId())));
-
-        Set<Warehouse> warehouses = productDto.getWarehouseIds().stream()
-                .map(id -> warehouseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(id))))
-                .collect(Collectors.toSet());
-
-        Product product = mapToProduct(productDto);
-        product.setProductType(productType);
-        product.setProductUnit(productUnit);
-        product.setWarehouses(warehouses);
-
-        Product newProduct = productRepository.save(product);
-
-        return mapToDto(newProduct);
+        Product product = mapToEntity(productDto);
+        return mapToDto(productRepository.save(product));
     }
 
     @Override
@@ -96,15 +50,19 @@ public class ProductServiceImpl implements ProductService {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
                 ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        PageRequest pageable = PageRequest.of(pageNo, pageSize, sort);
-        Page<Product> products = productRepository.findAll(pageable);
-        List<ProductDto> content = products.getContent().stream().map(this::mapToDto).collect(Collectors.toList());
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, sort);
+
+        Page<Product> products = productRepository.findAll(pageRequest);
+
+        List<Product> listOfProducts = products.getContent();
+
+        List<ProductDto> content = listOfProducts.stream().map(this::mapToDto).toList();
 
         ListResponse<ProductDto> productResponse = new ListResponse<>();
         productResponse.setContent(content);
         productResponse.setPageNo(products.getNumber());
         productResponse.setPageSize(products.getSize());
-        productResponse.setTotalElements((int) products.getTotalElements());
+        productResponse.setTotalElements((int)products.getTotalElements());
         productResponse.setTotalPages(products.getTotalPages());
         productResponse.setLast(products.isLast());
 
@@ -112,14 +70,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDto getProductById(Long id) {
+    public ProductDto getProductById(long id) {
         Product product = productRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+
         return mapToDto(product);
     }
 
     @Override
-    public ProductDto updateProduct(ProductDto productDto, Long productId) {
+    public ProductDto updateProduct(ProductDto productDto, long productId) {
         Product product = productRepository.findById(productId).orElseThrow(()
                 -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
 
@@ -129,17 +88,12 @@ public class ProductServiceImpl implements ProductService {
         ProductUnit productUnit = productUnitRepository.findById(productDto.getProductUnitId()).orElseThrow(() ->
                 new ResourceNotFoundException("Product unit", "id", String.valueOf(productDto.getProductUnitId())));
 
-        Set<Warehouse> warehouses = productDto.getWarehouseIds().stream()
-                .map(id -> warehouseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(id))))
-                .collect(Collectors.toSet());
-
         product.setName(productDto.getName());
         product.setDescription(productDto.getDescription());
         product.setPrice(productDto.getPrice());
         product.setQuantity(productDto.getQuantity());
         product.setProductType(productType);
         product.setProductUnit(productUnit);
-        product.setWarehouses(warehouses);
 
         Product updatedProduct = productRepository.save(product);
 
@@ -147,9 +101,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProductById(Long id) {
+    public void deleteProductById(long id) {
         Product product = productRepository.findById(id).orElseThrow(()
-            -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
         productRepository.delete(product);
     }
 }

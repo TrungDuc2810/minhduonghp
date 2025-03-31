@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/order-details")
 public class OrderDetailController {
@@ -20,8 +22,8 @@ public class OrderDetailController {
 
     @PreAuthorize("hasRole('ADMIN_KD')")
     @PostMapping
-    public ResponseEntity<OrderDetailDto> createOrder(@RequestBody OrderDetailDto orderDetailDto) {
-        return new ResponseEntity<>(orderDetailService.createOrderDetail(orderDetailDto), HttpStatus.CREATED);
+    public ResponseEntity<List<OrderDetailDto>> createOrderDetails(@RequestBody List<OrderDetailDto> orderDetailDtos) {
+        return new ResponseEntity<>(orderDetailService.createOrderDetails(orderDetailDtos), HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -40,9 +42,13 @@ public class OrderDetailController {
     }
 
     @PreAuthorize("hasRole('ADMIN_KD')")
-    @PutMapping("/{id}")
-    public ResponseEntity<OrderDetailDto> updateOrder(@PathVariable("id") long id, @RequestBody OrderDetailDto orderDetailDto) {
-        return new ResponseEntity<>(orderDetailService.updateOrderDetail(id, orderDetailDto), HttpStatus.OK);
+    @PutMapping("/orders/{orderId}")
+    public ResponseEntity<List<OrderDetailDto>> updateOrderDetails(
+            @PathVariable long orderId,
+            @RequestBody List<OrderDetailDto> orderDetailDtos) {
+
+        List<OrderDetailDto> updatedDetails = orderDetailService.updateOrderDetails(orderId, orderDetailDtos);
+        return ResponseEntity.ok(updatedDetails);
     }
 
     @DeleteMapping("/{id}")

@@ -1,6 +1,7 @@
 package com.example.TTTN.controller;
 
 import com.example.TTTN.payload.ListResponse;
+import com.example.TTTN.payload.OrderDetailDto;
 import com.example.TTTN.payload.OrderDto;
 import com.example.TTTN.service.OrderService;
 import com.example.TTTN.utils.AppConstants;
@@ -8,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -35,18 +38,18 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> getOrderById(@PathVariable("id") long id) {
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable(name = "id") long id) {
         return new ResponseEntity<>(orderService.getOrderById(id), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping("/{id}")
-    public ResponseEntity<OrderDto> updateOrder(@PathVariable("id") long id, @RequestBody OrderDto orderDto) {
-        return new ResponseEntity<>(orderService.updateOrder(id, orderDto), HttpStatus.OK);
+    public ResponseEntity<OrderDto> updateOrder(@PathVariable(name = "id") long orderId, @RequestBody OrderDto orderDto) {
+        return new ResponseEntity<>(orderService.updateOrder(orderId, orderDto), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrderById(@PathVariable("id") long id) {
+    public ResponseEntity<String> deleteOrderById(@PathVariable(name = "id") long id) {
         orderService.deleteOrderById(id);
         return new ResponseEntity<>("Delete successfully!!!", HttpStatus.OK);
     }

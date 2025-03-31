@@ -6,13 +6,17 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.OrderDetailDto;
 import com.example.TTTN.repository.*;
 import com.example.TTTN.service.OrderDetailService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderDetailServiceImpl implements OrderDetailService {
@@ -20,15 +24,17 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     private final ModelMapper modelMapper;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final PartnerRepository partnerRepository;
 
     public OrderDetailServiceImpl(OrderDetailRepository orderDetailRepository,
                                   ModelMapper modelMapper,
                                   OrderRepository orderRepository,
-                                  ProductRepository productRepository) {
+                                  ProductRepository productRepository, PartnerRepository partnerRepository) {
         this.orderDetailRepository = orderDetailRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.modelMapper = modelMapper;
+        this.partnerRepository = partnerRepository;
     }
 
     private OrderDetailDto mapToDto(OrderDetail orderDetail) {
@@ -40,10 +46,18 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     }
 
     @Override
-    public OrderDetailDto createOrderDetail(OrderDetailDto orderDetailDto) {
-        OrderDetail orderDetail = mapToEntity(orderDetailDto);
-        return mapToDto(orderDetailRepository.save(orderDetail));
+    @Transactional
+    public List<OrderDetailDto> createOrderDetails(List<OrderDetailDto> orderDetailDtos) {
+        List<OrderDetail> orderDetails = orderDetailDtos.stream()
+                .map(this::mapToEntity)
+                .collect(Collectors.toList());
+
+        return orderDetailRepository.saveAll(orderDetails)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public ListResponse<OrderDetailDto> getAllOrderDetails(int pageNo, int pageSize, String sortBy, String sortDir) {
@@ -105,24 +119,62 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     }
 
     @Override
-    public OrderDetailDto updateOrderDetail(long orderDetailId, OrderDetailDto orderDetailDto) {
-        OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId).orElseThrow(()
-                -> new ResourceNotFoundException("Order detail", "id", String.valueOf(orderDetailId)));
+    @Transactional
+    public List<OrderDetailDto> updateOrderDetails(long orderId, List<OrderDetailDto> orderDetailDtos) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(orderId)));
 
-        Order order = orderRepository.findById(orderDetailDto.getOrderId()).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(orderDetailDto.getOrderId())));
+        List<OrderDetail> currentOrderDetails = orderDetailRepository.findByOrderId(orderId);
 
-        Product product = productRepository.findById(orderDetailDto.getProductId()).orElseThrow(()
-                -> new ResourceNotFoundException("Product", "id", String.valueOf(orderDetailDto.getProductId())));
+        Map<Long, OrderDetail> existingDetailsMap = currentOrderDetails.stream()
+                .collect(Collectors.toMap(od -> od.getProduct().getId(), od -> od));
 
-        orderDetail.setQuantity(orderDetailDto.getQuantity());
-        orderDetail.setPrice(orderDetailDto.getPrice());
-        orderDetail.setOrder(order);
-        orderDetail.setProduct(product);
+        List<OrderDetail> updatedOrderDetails = new ArrayList<>();
 
-        orderDetailRepository.save(orderDetail);
+        for (OrderDetailDto dto : orderDetailDtos) {
+            OrderDetail orderDetail = existingDetailsMap.get(dto.getProductId());
 
-        return mapToDto(orderDetail);
+            if (orderDetail != null) {
+                orderDetail.setQuantity(dto.getQuantity());
+            } else {
+                orderDetail = mapToEntity(dto);
+                orderDetail.setOrder(order);
+            }
+
+            updatedOrderDetails.add(orderDetail);
+        }
+
+        // Tìm các order detail bị xóa
+        List<OrderDetail> removedOrderDetails = currentOrderDetails.stream()
+                .filter(od -> !orderDetailDtos.stream()
+                        .map(OrderDetailDto::getProductId)
+                        .collect(Collectors.toSet())
+                        .contains(od.getProduct().getId()))
+                .collect(Collectors.toList());
+
+        orderDetailRepository.deleteAll(removedOrderDetails);
+        List<OrderDetail> savedOrderDetails = orderDetailRepository.saveAll(updatedOrderDetails);
+
+        double oldTotalMoney = order.getTotalMoney(); // 200000
+        double newTotalMoney = savedOrderDetails.stream() // 300000
+                .mapToDouble(OrderDetail::getTotalMoney)
+                .sum();
+        double restDebt = Math.abs(oldTotalMoney - newTotalMoney);
+
+        Partner partner = partnerRepository.findById(order.getPartner().getId()).orElseThrow(()
+                -> new ResourceNotFoundException("Partner", "id", String.valueOf(order.getPartner().getId())));
+
+        if (oldTotalMoney > newTotalMoney) {
+            partner.setDebt(partner.getDebt() - restDebt);
+        } else {
+            partner.setDebt(partner.getDebt() + restDebt);
+        }
+        partnerRepository.save(partner);
+
+        order.setTotalMoney(newTotalMoney);
+        orderRepository.save(order);
+
+        return savedOrderDetails.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     @Override
