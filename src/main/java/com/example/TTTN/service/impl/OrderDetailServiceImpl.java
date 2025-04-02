@@ -29,7 +29,8 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     public OrderDetailServiceImpl(OrderDetailRepository orderDetailRepository,
                                   ModelMapper modelMapper,
                                   OrderRepository orderRepository,
-                                  ProductRepository productRepository, PartnerRepository partnerRepository) {
+                                  ProductRepository productRepository,
+                                  PartnerRepository partnerRepository) {
         this.orderDetailRepository = orderDetailRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;

@@ -1,9 +1,6 @@
 package com.example.TTTN.service.impl;
 
-import com.example.TTTN.entity.Order;
-import com.example.TTTN.entity.OrderStatus;
-import com.example.TTTN.entity.OrderType;
-import com.example.TTTN.entity.Partner;
+import com.example.TTTN.entity.*;
 import com.example.TTTN.exception.ResourceNotFoundException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.OrderDto;
@@ -135,9 +132,13 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
+    @Transactional
     public void deleteOrderById(long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(orderId)));
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(orderId)));
+
+        Partner partner = order.getPartner();
+        partner.setDebt(partner.getDebt() + order.getPaidMoney() - order.getTotalMoney());
 
         orderRepository.delete(order);
     }

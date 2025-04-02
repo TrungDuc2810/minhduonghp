@@ -32,7 +32,5 @@ public class Partner {
     @JoinColumn(name = "partner_type_id", nullable = false)
     private PartnerType partnerType;
     @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Invoice> invoices;
-    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Order> orders;
 }

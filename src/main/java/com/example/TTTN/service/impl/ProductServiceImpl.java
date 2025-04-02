@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,15 +21,19 @@ public class ProductServiceImpl implements ProductService {
     private final ModelMapper modelMapper;
     private final ProductTypeRepository productTypeRepository;
     private final ProductUnitRepository productUnitRepository;
+    private final WarehouseRepository warehouseRepository;
+    private final WarehouseProductRepository warehouseProductRepository;
 
     public ProductServiceImpl(ProductRepository productRepository,
                               ModelMapper modelMapper,
                               ProductTypeRepository productTypeRepository,
-                              ProductUnitRepository productUnitRepository) {
+                              ProductUnitRepository productUnitRepository, WarehouseRepository warehouseRepository, WarehouseProductRepository warehouseProductRepository) {
         this.productRepository = productRepository;
         this.modelMapper = modelMapper;
         this.productTypeRepository = productTypeRepository;
         this.productUnitRepository = productUnitRepository;
+        this.warehouseRepository = warehouseRepository;
+        this.warehouseProductRepository = warehouseProductRepository;
     }
 
     private ProductDto mapToDto(Product product) {
@@ -42,8 +47,27 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto addProduct(ProductDto productDto) {
         Product product = mapToEntity(productDto);
-        return mapToDto(productRepository.save(product));
+        product = productRepository.save(product);
+
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+
+        if (!warehouses.isEmpty()) {
+            List<WarehouseProduct> warehouseProducts = new ArrayList<>();
+
+            for (Warehouse warehouse : warehouses) {
+                WarehouseProduct warehouseProduct = new WarehouseProduct();
+                warehouseProduct.setWarehouse(warehouse);
+                warehouseProduct.setProduct(product);
+                warehouseProduct.setQuantity(0);
+                warehouseProducts.add(warehouseProduct);
+            }
+
+            warehouseProductRepository.saveAll(warehouseProducts);
+        }
+
+        return mapToDto(product);
     }
+
 
     @Override
     public ListResponse<ProductDto> getAllProducts(int pageNo, int pageSize, String sortBy, String sortDir) {
@@ -91,7 +115,6 @@ public class ProductServiceImpl implements ProductService {
         product.setName(productDto.getName());
         product.setDescription(productDto.getDescription());
         product.setPrice(productDto.getPrice());
-        product.setQuantity(productDto.getQuantity());
         product.setProductType(productType);
         product.setProductUnit(productUnit);
 

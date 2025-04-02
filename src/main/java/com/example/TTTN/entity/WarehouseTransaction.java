@@ -8,26 +8,29 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Setter
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "invoices")
-public class Invoice {
+@NoArgsConstructor
+@Entity
+@Table(name = "warehouse_transactions")
+public class WarehouseTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "money_amount")
-    private double moneyAmount;
     @Column(name = "created_at")
     private String createdAt;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_type_id", nullable = false)
-    private InvoiceType invoiceType;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @OneToOne(cascade = CascadeType.MERGE)
     private Order order;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id")
+    private Status status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_type_id")
+    private WarehouseTransactionType transactionType;
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now().toString();

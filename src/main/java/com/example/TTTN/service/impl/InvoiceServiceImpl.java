@@ -6,6 +6,7 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.InvoiceDto;
 import com.example.TTTN.repository.*;
 import com.example.TTTN.service.InvoiceService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,8 +49,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         Order order = orderRepository.findById(invoiceDto.getOrderId()).orElseThrow(()
                 -> new ResourceNotFoundException("Order", "id", String.valueOf(invoiceDto.getOrderId())));
 
-        Partner partner = partnerRepository.findById(invoiceDto.getPartnerId()).orElseThrow(()
-                -> new ResourceNotFoundException("Partner", "id", String.valueOf(invoiceDto.getPartnerId())));
+        Partner partner = partnerRepository.findById(order.getPartner().getId()).orElseThrow(()
+                -> new ResourceNotFoundException("Partner", "id", String.valueOf(order.getPartner().getId())));
 
         order.setPaidMoney(order.getPaidMoney() + invoiceDto.getMoneyAmount());
         partner.setDebt(partner.getDebt() - invoiceDto.getMoneyAmount());
@@ -110,14 +111,15 @@ public class InvoiceServiceImpl implements InvoiceService {
         Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(()
                 -> new ResourceNotFoundException("Invoice", "id", String.valueOf(invoiceId)));
 
-        Partner partner = partnerRepository.findById(invoiceDto.getPartnerId()).orElseThrow(()
-                -> new ResourceNotFoundException("Partner", "id", String.valueOf(invoiceDto.getPartnerId())));
+        Order order = orderRepository.findById(invoiceDto.getOrderId()).orElseThrow(()
+                -> new ResourceNotFoundException("Order", "id", String.valueOf(invoiceDto.getOrderId())));
+
+        Partner partner = partnerRepository.findById(order.getPartner().getId()).orElseThrow(()
+                -> new ResourceNotFoundException("Partner", "id", String.valueOf(order.getPartner().getId())));
 
         InvoiceType invoiceType = invoiceTypeRepository.findById(invoiceDto.getInvoiceTypeId()).orElseThrow(()
                 -> new ResourceNotFoundException("Invoice type", "id", String.valueOf(invoiceDto.getInvoiceTypeId())));
 
-        Order order = orderRepository.findById(invoiceDto.getOrderId()).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(invoiceDto.getOrderId())));
 
         double oldMoneyAmount = invoice.getMoneyAmount();
         double newMoneyAmount = invoiceDto.getMoneyAmount();
@@ -137,7 +139,6 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
 
         invoice.setMoneyAmount(invoiceDto.getMoneyAmount());
-        invoice.setPartner(partner);
         invoice.setInvoiceType(invoiceType);
         invoice.setOrder(order);
 
@@ -147,9 +148,19 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional
     public void deleteInvoiceById(long invoiceId) {
-        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(()
-                -> new ResourceNotFoundException("Partner", "id", String.valueOf(invoiceId)));
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice", "id", String.valueOf(invoiceId)));
+
+        Order order = invoice.getOrder();
+        order.setPaidMoney(order.getPaidMoney() - invoice.getMoneyAmount());
+        String status = (order.getTotalMoney() == order.getPaidMoney()) ? "Đã thanh toán" : "Thanh toán một phần";
+        order.setOrderStatus(orderStatusRepository.findByName(status));
+
+        Partner partner = order.getPartner();
+        partner.setDebt(partner.getDebt() + invoice.getMoneyAmount());
+
         invoiceRepository.delete(invoice);
     }
 }

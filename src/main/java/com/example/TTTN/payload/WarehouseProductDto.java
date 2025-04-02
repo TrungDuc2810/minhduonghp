@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WarehouseProductDto {
+    private long id;
     private long warehouseId;
     private long productId;
     private int quantity;
