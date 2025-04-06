@@ -1,6 +1,5 @@
 package com.example.TTTN.payload;
 
-import com.example.TTTN.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,12 +7,14 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+@NoArgsConstructor
+public class WarehouseTransferDto {
     private long id;
-    private String username;
-    private String password;
+    private int quantity;
     private String createdAt;
-    private RoleDto role;
+    private long sourceWarehouseId;
+    private long destinationWarehouseId;
+    private long productId;
+    private long statusId;
 }
