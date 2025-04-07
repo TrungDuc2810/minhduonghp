@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class RegisterDto {
     private String username;
     private String password;
-    private String role;
+    private long roleId;
     private String createdAt;
     @PrePersist
     protected void onCreate() {

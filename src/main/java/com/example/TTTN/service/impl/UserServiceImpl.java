@@ -1,9 +1,11 @@
 package com.example.TTTN.service.impl;
 
+import com.example.TTTN.entity.Role;
 import com.example.TTTN.entity.User;
 import com.example.TTTN.exception.ResourceNotFoundException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.UserDto;
+import com.example.TTTN.repository.RoleRepository;
 import com.example.TTTN.repository.UserRepository;
 import com.example.TTTN.service.UserService;
 import org.modelmapper.ModelMapper;
@@ -18,10 +20,12 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final ModelMapper modelMapper;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, ModelMapper modelMapper) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -54,6 +58,19 @@ public class UserServiceImpl implements UserService {
         userResponse.setLast(users.isLast());
 
         return userResponse;
+    }
+
+    @Override
+    public UserDto updateUser(long id, UserDto userDto) {
+        User user = userRepository.findById(id).orElseThrow(()
+                -> new ResourceNotFoundException("User", "id", String.valueOf(id)));
+
+        Role role = roleRepository.findById(userDto.getRoleId()).orElseThrow(()
+                -> new ResourceNotFoundException("Role", "id", String.valueOf(userDto.getRoleId())));
+
+        user.setRole(role);
+
+        return mapToDto(userRepository.save(user));
     }
 
     @Override

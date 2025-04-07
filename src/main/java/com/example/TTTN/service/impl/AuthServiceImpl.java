@@ -60,10 +60,8 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(registerDto.getUsername());
         user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
 
-        String roleName = registerDto.getRole();
-
-        Role role = roleRepository.findByName(roleName).orElseThrow(()
-                -> new WebAPIException(HttpStatus.BAD_REQUEST, "Invalid role"));
+        Role role = roleRepository.findById(registerDto.getRoleId()).orElseThrow(()
+                -> new WebAPIException(HttpStatus.BAD_REQUEST, "Role not found"));
 
         user.setRole(role);
 
