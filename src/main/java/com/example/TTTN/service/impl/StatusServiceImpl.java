@@ -1,0 +1,35 @@
+package com.example.TTTN.service.impl;
+
+import com.example.TTTN.entity.Status;
+import com.example.TTTN.exception.ResourceNotFoundException;
+import com.example.TTTN.payload.StatusDto;
+import com.example.TTTN.repository.StatusRepository;
+import com.example.TTTN.service.StatusService;
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
+
+@Service
+public class StatusServiceImpl implements StatusService {
+    private final StatusRepository statusRepository;
+    private final ModelMapper modelMapper;
+
+    public StatusServiceImpl(StatusRepository statusRepository, ModelMapper modelMapper) {
+        this.statusRepository = statusRepository;
+        this.modelMapper = modelMapper;
+    }
+
+    private StatusDto mapToDto(Status status) {
+        return modelMapper.map(status, StatusDto.class);
+    }
+
+    private Status mapToEntity(StatusDto statusDto) {
+        return modelMapper.map(statusDto, Status.class);
+    }
+
+    @Override
+    public StatusDto getStatusById(long id) {
+        Status status = statusRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Status", "id", String.valueOf(id)));
+        return mapToDto(status);
+    }
+}
