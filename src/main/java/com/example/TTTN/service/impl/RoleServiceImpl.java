@@ -2,10 +2,14 @@ package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.Role;
 import com.example.TTTN.exception.ResourceNotFoundException;
+import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.RoleDto;
 import com.example.TTTN.repository.RoleRepository;
 import com.example.TTTN.service.RoleService;
+import com.example.TTTN.utils.PaginationUtils;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,5 +35,13 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Role", "id", String.valueOf(id)));
         return mapToDto(role);
+    }
+
+    @Override
+    public ListResponse<RoleDto> getAllRoles(int pageNo, int pageSize, String sortBy, String sortDir) {
+        PageRequest pageRequest = PaginationUtils.createPageRequest(pageNo, pageSize, sortBy, sortDir);
+        Page<Role> roles = roleRepository.findAll(pageRequest);
+
+        return PaginationUtils.toListResponse(roles, this::mapToDto);
     }
 }

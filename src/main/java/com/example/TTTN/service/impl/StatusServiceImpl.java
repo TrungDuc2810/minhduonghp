@@ -2,10 +2,14 @@ package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.Status;
 import com.example.TTTN.exception.ResourceNotFoundException;
+import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.StatusDto;
 import com.example.TTTN.repository.StatusRepository;
 import com.example.TTTN.service.StatusService;
+import com.example.TTTN.utils.PaginationUtils;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,5 +35,13 @@ public class StatusServiceImpl implements StatusService {
         Status status = statusRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Status", "id", String.valueOf(id)));
         return mapToDto(status);
+    }
+
+    @Override
+    public ListResponse<StatusDto> getAllStatus(int pageNo, int pageSize, String sortBy, String sortDir) {
+        PageRequest pageRequest = PaginationUtils.createPageRequest(pageNo, pageSize, sortBy, sortDir);
+        Page<Status> status = statusRepository.findAll(pageRequest);
+
+        return PaginationUtils.toListResponse(status, this::mapToDto);
     }
 }

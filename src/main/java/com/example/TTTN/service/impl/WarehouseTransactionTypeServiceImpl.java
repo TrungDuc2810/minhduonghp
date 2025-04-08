@@ -2,10 +2,14 @@ package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.WarehouseTransactionType;
 import com.example.TTTN.exception.ResourceNotFoundException;
+import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.WarehouseTransactionTypeDto;
 import com.example.TTTN.repository.WarehouseTransactionTypeRepository;
 import com.example.TTTN.service.WarehouseTransactionTypeService;
+import com.example.TTTN.utils.PaginationUtils;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,5 +35,13 @@ public class WarehouseTransactionTypeServiceImpl implements WarehouseTransaction
         WarehouseTransactionType warehouseTransactionType = warehouseTransactionTypeRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Warehouse transaction type", "id", String.valueOf(id)));
         return mapToDto(warehouseTransactionType);
+    }
+
+    @Override
+    public ListResponse<WarehouseTransactionTypeDto> getAllWarehouseTransactionTypes(int pageNo, int pageSize, String sortBy, String sortDir) {
+        PageRequest pageRequest = PaginationUtils.createPageRequest(pageNo, pageSize, sortBy, sortDir);
+        Page<WarehouseTransactionType> warehouseTransactionTypes = warehouseTransactionTypeRepository.findAll(pageRequest);
+
+        return PaginationUtils.toListResponse(warehouseTransactionTypes, this::mapToDto);
     }
 }
