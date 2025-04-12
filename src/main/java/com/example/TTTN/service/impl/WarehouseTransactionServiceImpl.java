@@ -8,6 +8,9 @@ import com.example.TTTN.repository.*;
 import com.example.TTTN.service.WarehouseTransactionService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -93,16 +96,40 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
 
     @Override
     public ListResponse<WarehouseTransactionDto> getAllWarehouseTransactions(int pageNo, int pageSize, String sortBy, String sortDir) {
-        return null;
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, sort);
+
+        Page<WarehouseTransaction> warehouseTransactions = warehouseTransactionRepository.findAll(pageRequest);
+
+        List<WarehouseTransaction> listOfWarehouseTransactions = warehouseTransactions.getContent();
+
+        List<WarehouseTransactionDto> content = listOfWarehouseTransactions.stream().map(this::mapToDto).toList();
+
+        ListResponse<WarehouseTransactionDto> response = new ListResponse<>();
+        response.setContent(content);
+        response.setPageNo(warehouseTransactions.getNumber());
+        response.setPageSize(warehouseTransactions.getSize());
+        response.setTotalElements((int) warehouseTransactions.getTotalElements());
+        response.setTotalPages(warehouseTransactions.getTotalPages());
+        response.setLast(warehouseTransactions.isLast());
+
+        return response;
     }
 
     @Override
     public WarehouseTransactionDto getWarehouseTransaction(long id) {
-        return null;
+        WarehouseTransaction warehouseTransaction = warehouseTransactionRepository.findById(id).orElseThrow(()
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+
+        return mapToDto(warehouseTransaction);
     }
 
     @Override
     public void deleteWarehouseTransaction(long id) {
-
+        WarehouseTransaction warehouseTransaction = warehouseTransactionRepository.findById(id).orElseThrow(()
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+        warehouseTransactionRepository.delete(warehouseTransaction);
     }
 }
