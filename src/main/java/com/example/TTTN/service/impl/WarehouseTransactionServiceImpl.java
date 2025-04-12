@@ -79,7 +79,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                 Product product = productRepository.findById(productId).orElseThrow(()
                         -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
 
-                if (warehouseTransactionType.getName().equalsIgnoreCase("Nhập")) {
+                if (warehouseTransactionType.getName().equalsIgnoreCase("Nhập kho")) {
                     warehouseProduct.setQuantity(warehouseProduct.getQuantity() + quantity);
                     product.setQuantity(product.getQuantity() + quantity);
                 } else {
