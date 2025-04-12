@@ -84,6 +84,33 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public ListResponse<OrderDto> getOrdersByPartnerId(long id, int pageNo, int pageSize, String sortBy, String sortDir) {
+        partnerRepository.findById(id).orElseThrow(()
+                -> new ResourceNotFoundException("Order", "id", String.valueOf(id)));
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, sort);
+
+        Page<Order> orders = orderRepository.findByPartnerId(id, pageRequest);
+
+        List<Order> listOfOrders = orders.getContent();
+
+        List<OrderDto> content = listOfOrders.stream().map(this::mapToDto).toList();
+
+        ListResponse<OrderDto> orderResponse = new ListResponse<>();
+        orderResponse.setContent(content);
+        orderResponse.setPageNo(orders.getNumber());
+        orderResponse.setPageSize(orders.getSize());
+        orderResponse.setTotalPages(orders.getTotalPages());
+        orderResponse.setTotalElements((int)orders.getTotalElements());
+        orderResponse.setLast(orders.isLast());
+
+        return orderResponse;
+    }
+
+    @Override
     public OrderDto getOrderById(long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(()
                 -> new ResourceNotFoundException("Order", "id", String.valueOf(orderId)));

@@ -1,7 +1,6 @@
 package com.example.TTTN.controller;
 
 import com.example.TTTN.payload.ListResponse;
-import com.example.TTTN.payload.OrderDetailDto;
 import com.example.TTTN.payload.OrderDto;
 import com.example.TTTN.service.OrderService;
 import com.example.TTTN.utils.AppConstants;
@@ -10,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -35,6 +33,17 @@ public class OrderController {
             @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir
     ) {
         return orderService.getAllOrders(pageNo, pageSize, sortBy, sortDir);
+    }
+
+    @GetMapping("/partners/{id}")
+    public ListResponse<OrderDto> getOrdersByPartnerId(
+            @PathVariable(name = "id") long id,
+            @RequestParam(value = "pageNo", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir
+    ) {
+        return orderService.getOrdersByPartnerId(id, pageNo, pageSize, sortBy, sortDir);
     }
 
     @GetMapping("/{id}")
