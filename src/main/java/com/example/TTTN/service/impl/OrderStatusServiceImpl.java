@@ -7,6 +7,7 @@ import com.example.TTTN.payload.OrderStatusDto;
 import com.example.TTTN.repository.OrderStatusRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class OrderStatusServiceImpl implements GenericService<OrderStatusDto> {
     }
 
     @Override
+    @Transactional
     public OrderStatusDto create(OrderStatusDto orderStatusDto) {
         OrderStatus orderStatus = mapToEntity(orderStatusDto);
         return mapToDto(orderStatusRepository.save(orderStatus));
     }
 
     @Override
+    @Transactional
     public OrderStatusDto update(long id, OrderStatusDto orderStatusDto) {
         OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Order status", "id", String.valueOf(id)));

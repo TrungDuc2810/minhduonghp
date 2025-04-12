@@ -8,6 +8,7 @@ import com.example.TTTN.payload.UserDto;
 import com.example.TTTN.repository.RoleRepository;
 import com.example.TTTN.repository.UserRepository;
 import com.example.TTTN.service.UserService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -61,6 +62,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto updateUser(long id, UserDto userDto) {
         User user = userRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("User", "id", String.valueOf(id)));

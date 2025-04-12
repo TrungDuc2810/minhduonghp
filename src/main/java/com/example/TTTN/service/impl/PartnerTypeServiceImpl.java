@@ -7,6 +7,7 @@ import com.example.TTTN.payload.PartnerTypeDto;
 import com.example.TTTN.repository.PartnerTypeRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class PartnerTypeServiceImpl implements GenericService<PartnerTypeDto> {
     }
 
     @Override
+    @Transactional
     public PartnerTypeDto create(PartnerTypeDto partnerTypeDto) {
         PartnerType partnerType = mapToEntity(partnerTypeDto);
         return mapToDto(partnerTypeRepository.save(partnerType));
     }
 
     @Override
+    @Transactional
     public PartnerTypeDto update(long id, PartnerTypeDto partnerTypeDto) {
         PartnerType partnerType = partnerTypeRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Partner type", "id", String.valueOf(id)));

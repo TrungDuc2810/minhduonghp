@@ -8,6 +8,7 @@ import com.example.TTTN.payload.PartnerDto;
 import com.example.TTTN.repository.PartnerRepository;
 import com.example.TTTN.repository.PartnerTypeRepository;
 import com.example.TTTN.service.PartnerService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +41,7 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
     @Override
+    @Transactional
     public PartnerDto createPartner(PartnerDto partnerDto) {
         Partner partner = mapToEntity(partnerDto);
         return mapToDto(partnerRepository.save(partner));
@@ -81,6 +83,7 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
     @Override
+    @Transactional
     public PartnerDto updatePartner(long partnerId, PartnerDto partnerDto) {
         Partner partner = partnerRepository.findById(partnerId).orElseThrow(()
                 -> new ResourceNotFoundException("Partner", "id", String.valueOf(partnerId)));

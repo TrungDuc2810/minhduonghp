@@ -7,6 +7,7 @@ import com.example.TTTN.payload.OrderTypeDto;
 import com.example.TTTN.repository.OrderTypeRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class OrderTypeServiceImpl implements GenericService<OrderTypeDto> {
     }
 
     @Override
+    @Transactional
     public OrderTypeDto create(OrderTypeDto orderTypeDto) {
         OrderType orderType = mapToEntity(orderTypeDto);
         return mapToDto(orderTypeRepository.save(orderType));
     }
 
     @Override
+    @Transactional
     public OrderTypeDto update(long id, OrderTypeDto orderTypeDto) {
         OrderType orderType = orderTypeRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Order type", "id", String.valueOf(id)));

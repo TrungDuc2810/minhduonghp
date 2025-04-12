@@ -7,6 +7,7 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.repository.InventoryAdjustmentTypeRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,12 +48,14 @@ public class InventoryAdjustmentTypeServiceImpl implements GenericService<Invent
     }
 
     @Override
+    @Transactional
     public InventoryAdjustmentTypeDto create(InventoryAdjustmentTypeDto inventoryAdjustmentTypeDto) {
         InventoryAdjustmentType inventoryAdjustmentType = mapToEntity(inventoryAdjustmentTypeDto);
         return mapToDto(inventoryAdjustmentTypeRepository.save(inventoryAdjustmentType));
     }
 
     @Override
+    @Transactional
     public InventoryAdjustmentTypeDto update(long id, InventoryAdjustmentTypeDto inventoryAdjustmentTypeDto) {
         InventoryAdjustmentType inventoryAdjustmentType = inventoryAdjustmentTypeRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Inventory adjustment type", "id", String.valueOf(id)));

@@ -6,6 +6,7 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
 import com.example.TTTN.repository.*;
 import com.example.TTTN.service.ProductService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductDto addProduct(ProductDto productDto) {
         Product product = mapToEntity(productDto);
         product = productRepository.save(product);
@@ -102,6 +104,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductDto updateProduct(ProductDto productDto, long productId) {
         Product product = productRepository.findById(productId).orElseThrow(()
                 -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));

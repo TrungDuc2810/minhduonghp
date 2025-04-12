@@ -7,6 +7,7 @@ import com.example.TTTN.payload.RoleDto;
 import com.example.TTTN.repository.RoleRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class RoleServiceImpl implements GenericService<RoleDto> {
     }
 
     @Override
+    @Transactional
     public RoleDto create(RoleDto roleDto) {
         Role role = mapToEntity(roleDto);
         return mapToDto(roleRepository.save(role));
     }
 
     @Override
+    @Transactional
     public RoleDto update(long id, RoleDto roleDto) {
         Role role = roleRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Role", "id", String.valueOf(id)));

@@ -48,8 +48,41 @@ public class WarehouseTransferServiceImpl implements WarehouseTransferService {
     }
 
     @Override
+    @Transactional
     public WarehouseTransferDto createWarehouseTransfer(WarehouseTransferDto warehouseTransferDto) {
         WarehouseTransfer warehouseTransfer = mapToEntity(warehouseTransferDto);
+
+        Warehouse sourceWarehouse = warehouseRepository.findById(warehouseTransferDto.getSourceWarehouseId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(warehouseTransferDto.getSourceWarehouseId())));
+
+        Warehouse destWarehouse = warehouseRepository.findById(warehouseTransferDto.getDestinationWarehouseId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(warehouseTransferDto.getDestinationWarehouseId())));
+
+        Product product = productRepository.findById(warehouseTransferDto.getProductId()).orElseThrow(()
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(warehouseTransferDto.getProductId())));
+
+        Status status = statusRepository.findByName("Đã hoàn thành");
+        if (warehouseTransferDto.getStatusId() == status.getId()) {
+            WarehouseProduct sourceProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+                    warehouseTransferDto.getSourceWarehouseId(), warehouseTransferDto.getProductId());
+            WarehouseProduct destProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+                    warehouseTransferDto.getDestinationWarehouseId(), warehouseTransferDto.getProductId());
+
+            if (sourceProduct == null || destProduct == null) {
+                throw new ResourceNotFoundException("Warehouse product", "source or destination", "Not found");
+            }
+
+            if (sourceProduct.getQuantity() < warehouseTransferDto.getQuantity()) {
+                throw new IllegalArgumentException("Source warehouse does not have enough quantity.");
+            }
+
+            sourceProduct.setQuantity(sourceProduct.getQuantity() - warehouseTransferDto.getQuantity());
+            destProduct.setQuantity(destProduct.getQuantity() + warehouseTransferDto.getQuantity());
+
+            warehouseProductRepository.save(sourceProduct);
+            warehouseProductRepository.save(destProduct);
+        }
+
         return mapToDto(warehouseTransferRepository.save(warehouseTransfer));
     }
 

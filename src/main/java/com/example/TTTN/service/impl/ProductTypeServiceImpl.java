@@ -7,6 +7,7 @@ import com.example.TTTN.payload.ProductTypeDto;
 import com.example.TTTN.repository.ProductTypeRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class ProductTypeServiceImpl implements GenericService<ProductTypeDto> {
     }
 
     @Override
+    @Transactional
     public ProductTypeDto create(ProductTypeDto productTypeDto) {
         ProductType productType = mapToEntity(productTypeDto);
         return mapToDto(productTypeRepository.save(productType));
     }
 
     @Override
+    @Transactional
     public ProductTypeDto update(long id, ProductTypeDto productTypeDto) {
         ProductType productType = productTypeRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Product type", "id", String.valueOf(id)));
