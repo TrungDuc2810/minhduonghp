@@ -49,8 +49,40 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
     }
 
     @Override
+    @Transactional
     public WarehouseTransactionDto createWarehouseTransaction(WarehouseTransactionDto warehouseTransactionDto) {
         WarehouseTransaction warehouseTransaction = mapToEntity(warehouseTransactionDto);
+
+        Order order = orderRepository.findById(warehouseTransactionDto.getOrderId()).orElseThrow(()
+                -> new ResourceNotFoundException("Order", "id", String.valueOf(warehouseTransactionDto.getOrderId())));
+
+        Status status = statusRepository.findByName("Đã hoàn thành");
+        WarehouseTransactionType warehouseTransactionType = warehouseTransactionTypeRepository.findById(warehouseTransactionDto.getTransactionTypeId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse Transaction Type", "id", String.valueOf(warehouseTransactionDto.getTransactionTypeId())));
+        if (warehouseTransactionDto.getStatusId() == status.getId()) {
+            long warehouseId = warehouseTransactionDto.getWarehouseId();
+            List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
+
+            for (OrderDetail orderDetail : orderDetails) {
+                long productId = orderDetail.getProduct().getId();
+                int quantity = orderDetail.getQuantity();
+
+                WarehouseProduct warehouseProduct = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
+
+                Product product = productRepository.findById(productId).orElseThrow(()
+                        -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+
+                if (warehouseTransactionType.getName().equalsIgnoreCase("Nhập")) {
+                    warehouseProduct.setQuantity(warehouseProduct.getQuantity() + quantity);
+                    product.setQuantity(product.getQuantity() + quantity);
+                } else {
+                    warehouseProduct.setQuantity(warehouseProduct.getQuantity() - quantity);
+                    product.setQuantity(product.getQuantity() - quantity);
+                }
+                warehouseProductRepository.save(warehouseProduct);
+                productRepository.save(product);
+            }
+        }
         return mapToDto(warehouseTransactionRepository.save(warehouseTransaction));
     }
 

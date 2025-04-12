@@ -7,6 +7,7 @@ import com.example.TTTN.payload.ProductUnitDto;
 import com.example.TTTN.repository.ProductUnitRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class ProductUnitServiceImpl implements GenericService<ProductUnitDto> {
     }
 
     @Override
+    @Transactional
     public ProductUnitDto create(ProductUnitDto productUnitDto) {
         ProductUnit productUnit = mapToEntity(productUnitDto);
         return mapToDto(productUnitRepository.save(productUnit));
     }
 
     @Override
+    @Transactional
     public ProductUnitDto update(long id, ProductUnitDto productUnitDto) {
         ProductUnit productUnit = productUnitRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Product unit", "id", String.valueOf(id)));

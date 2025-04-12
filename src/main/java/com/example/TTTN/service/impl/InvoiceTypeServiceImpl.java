@@ -7,6 +7,7 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.repository.InvoiceTypeRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class InvoiceTypeServiceImpl implements GenericService<InvoiceTypeDto> {
     }
 
     @Override
+    @Transactional
     public InvoiceTypeDto create(InvoiceTypeDto dto) {
         InvoiceType invoiceType = mapToEntity(dto);
         return mapToDto(invoiceTypeRepository.save(invoiceType));
     }
 
     @Override
+    @Transactional
     public InvoiceTypeDto update(long id, InvoiceTypeDto dto) {
         InvoiceType invoiceType = invoiceTypeRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Invoice type", "id", String.valueOf(id)));

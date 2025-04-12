@@ -8,6 +8,7 @@ import com.example.TTTN.repository.ProductRepository;
 import com.example.TTTN.repository.WarehouseProductRepository;
 import com.example.TTTN.repository.WarehouseRepository;
 import com.example.TTTN.service.WarehouseProductService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ public class WarehouseProductServiceImpl implements WarehouseProductService {
     }
 
     @Override
+    @Transactional
     public WarehouseProductDto createWarehouseProduct(WarehouseProductDto warehouseProductDto) {
         WarehouseProduct warehouseProduct = mapToEntity(warehouseProductDto);
         return mapToDto(warehouseProduct);
@@ -79,6 +81,7 @@ public class WarehouseProductServiceImpl implements WarehouseProductService {
     }
 
     @Override
+    @Transactional
     public WarehouseProductDto updateWarehouseProduct(WarehouseProductDto warehouseProductDto, long id) {
         WarehouseProduct warehouseProduct = warehouseProductRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Warehouse product", "id", String.valueOf(id)));

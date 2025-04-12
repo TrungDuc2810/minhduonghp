@@ -6,6 +6,7 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.PostDto;
 import com.example.TTTN.repository.PostRepository;
 import com.example.TTTN.service.PostService;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostDto createPost(PostDto postDto) {
         Post post = mapToEntity(postDto);
         return mapToDto(postRepository.save(post));
@@ -71,6 +73,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostDto updatePost(long postId, PostDto postDto) {
         Post post = postRepository.findById(postId).orElseThrow(()
                 -> new ResourceNotFoundException("Post", "id", String.valueOf(postId)));

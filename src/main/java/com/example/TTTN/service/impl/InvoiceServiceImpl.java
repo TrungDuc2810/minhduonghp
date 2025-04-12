@@ -45,6 +45,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional
     public InvoiceDto createInvoice(InvoiceDto invoiceDto) {
         Order order = orderRepository.findById(invoiceDto.getOrderId()).orElseThrow(()
                 -> new ResourceNotFoundException("Order", "id", String.valueOf(invoiceDto.getOrderId())));
@@ -107,6 +108,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional
     public InvoiceDto updateInvoice(long invoiceId, InvoiceDto invoiceDto) {
         Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(()
                 -> new ResourceNotFoundException("Invoice", "id", String.valueOf(invoiceId)));

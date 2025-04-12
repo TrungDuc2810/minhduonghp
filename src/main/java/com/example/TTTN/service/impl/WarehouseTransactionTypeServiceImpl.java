@@ -7,6 +7,7 @@ import com.example.TTTN.payload.WarehouseTransactionTypeDto;
 import com.example.TTTN.repository.WarehouseTransactionTypeRepository;
 import com.example.TTTN.service.common.GenericService;
 import com.example.TTTN.utils.PaginationUtils;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,12 +47,14 @@ public class WarehouseTransactionTypeServiceImpl implements GenericService<Wareh
     }
 
     @Override
+    @Transactional
     public WarehouseTransactionTypeDto create(WarehouseTransactionTypeDto warehouseTransactionTypeDto) {
         WarehouseTransactionType warehouseTransactionType = mapToEntity(warehouseTransactionTypeDto);
         return mapToDto(warehouseTransactionTypeRepository.save(warehouseTransactionType));
     }
 
     @Override
+    @Transactional
     public WarehouseTransactionTypeDto update(long id, WarehouseTransactionTypeDto warehouseTransactionTypeDto) {
         WarehouseTransactionType warehouseTransactionType = warehouseTransactionTypeRepository.findById(id).orElseThrow(()
                 -> new ResourceNotFoundException("Warehouse transaction type", "id", String.valueOf(id)));

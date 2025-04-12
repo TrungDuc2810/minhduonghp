@@ -9,7 +9,7 @@ import com.example.TTTN.repository.RoleRepository;
 import com.example.TTTN.repository.UserRepository;
 import com.example.TTTN.security.JwtTokenProvider;
 import com.example.TTTN.service.AuthService;
-import org.springframework.context.annotation.Bean;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -51,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public String register(RegisterDto registerDto) {
         if(userRepository.existsByUsername(registerDto.getUsername())) {
             throw new WebAPIException(HttpStatus.BAD_REQUEST, "Username is already exists!!!");
