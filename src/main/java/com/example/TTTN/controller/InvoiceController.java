@@ -18,7 +18,7 @@ public class InvoiceController {
         this.invoiceService = invoiceService;
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PostMapping
     public ResponseEntity<InvoiceDto> createInvoice(@RequestBody InvoiceDto invoiceDto) {
         return new ResponseEntity<>(invoiceService.createInvoice(invoiceDto), HttpStatus.CREATED);
@@ -39,14 +39,14 @@ public class InvoiceController {
         return new ResponseEntity<>(invoiceService.getInvoiceById(invoiceId), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<InvoiceDto> updateInvoice(@PathVariable(name = "id") long invoiceId,
                                                     @RequestBody InvoiceDto invoiceDto) {
         return new ResponseEntity<>(invoiceService.updateInvoice(invoiceId, invoiceDto), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteInvoiceById(@PathVariable(name = "id") long invoiceId) {
         invoiceService.deleteInvoiceById(invoiceId);

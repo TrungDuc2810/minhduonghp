@@ -157,7 +157,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         Order order = invoice.getOrder();
         order.setPaidMoney(order.getPaidMoney() - invoice.getMoneyAmount());
-        String status = (order.getTotalMoney() == order.getPaidMoney()) ? "Đã thanh toán" : "Thanh toán một phần";
+        String status = order.getPaidMoney() == 0.0 ? "Chưa thanh toán" :
+                order.getPaidMoney() < order.getTotalMoney() ? "Thanh toán một phần" :
+                        "Đã thanh toán";
         order.setOrderStatus(orderStatusRepository.findByName(status));
 
         Partner partner = order.getPartner();

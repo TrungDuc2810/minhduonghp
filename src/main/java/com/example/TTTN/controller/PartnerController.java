@@ -18,7 +18,7 @@ public class PartnerController {
         this.partnerService = partnerService;
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PostMapping
     public ResponseEntity<PartnerDto> createPartner(@RequestBody PartnerDto partnerDto) {
         return new ResponseEntity<>(partnerService.createPartner(partnerDto), HttpStatus.CREATED);
@@ -39,14 +39,14 @@ public class PartnerController {
         return new ResponseEntity<>(partnerService.getPartnerById(partnerId), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<PartnerDto> updatePartner(@PathVariable(name = "id") long partnerId,
                                                     @RequestBody PartnerDto partnerDto) {
         return new ResponseEntity<>(partnerService.updatePartner(partnerId, partnerDto), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deletePartnerById(@PathVariable(name = "id") long partnerId) {
         partnerService.deletePartnerById(partnerId);

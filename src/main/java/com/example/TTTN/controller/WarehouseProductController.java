@@ -18,7 +18,7 @@ public class WarehouseProductController {
         this.warehouseProductService = warehouseProductService;
     }
 
-    @PreAuthorize("hasRole('ADMIN_K')")
+//    @PreAuthorize("hasRole('ADMIN_K')")
     @PostMapping
     public ResponseEntity<WarehouseProductDto> addProduct(@RequestBody WarehouseProductDto warehouseProductDto) {
         return new ResponseEntity<>(warehouseProductService.createWarehouseProduct(warehouseProductDto), HttpStatus.CREATED);
@@ -39,14 +39,14 @@ public class WarehouseProductController {
         return new ResponseEntity<>(warehouseProductService.getWarehouseProductById(id), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_K')")
+//    @PreAuthorize("hasRole('ADMIN_K')")
     @PutMapping("/{id}")
     public ResponseEntity<WarehouseProductDto> updateProduct(@PathVariable(name = "id") long id,
                                                     @RequestBody WarehouseProductDto warehouseProductDto) {
         return new ResponseEntity<>(warehouseProductService.updateWarehouseProduct(warehouseProductDto, id), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_K')")
+//    @PreAuthorize("hasRole('ADMIN_K')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteWarehouseProductById(@PathVariable(name = "id") long id) {
         warehouseProductService.deleteWarehouseProductById(id);

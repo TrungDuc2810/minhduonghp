@@ -23,7 +23,7 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<PostDto> createPost(@RequestPart("post") PostDto postDto,
                                               @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
@@ -72,7 +72,7 @@ public class PostController {
         return ResponseEntity.ok(postService.getPostById(postId));
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<PostDto> updatePost(
             @PathVariable(name = "id") long postId,
@@ -91,7 +91,7 @@ public class PostController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletePostById(@PathVariable(name = "id") long postId) {
         postService.deletePostById(postId);

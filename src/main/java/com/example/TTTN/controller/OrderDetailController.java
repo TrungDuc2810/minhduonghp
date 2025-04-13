@@ -20,7 +20,7 @@ public class OrderDetailController {
         this.orderDetailService = orderDetailService;
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PostMapping
     public ResponseEntity<List<OrderDetailDto>> createOrderDetails(@RequestBody List<OrderDetailDto> orderDetailDtos) {
         return new ResponseEntity<>(orderDetailService.createOrderDetails(orderDetailDtos), HttpStatus.CREATED);
@@ -41,7 +41,7 @@ public class OrderDetailController {
         return new ResponseEntity<>(orderDetailService.getOrderDetailById(id), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping("/orders/{orderId}")
     public ResponseEntity<List<OrderDetailDto>> updateOrderDetails(
             @PathVariable long orderId,

@@ -19,7 +19,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PostMapping
     public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto orderDto) {
         return new ResponseEntity<>(orderService.createOrder(orderDto), HttpStatus.CREATED);
@@ -51,7 +51,7 @@ public class OrderController {
         return new ResponseEntity<>(orderService.getOrderById(id), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN_KD')")
+//    @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping("/{id}")
     public ResponseEntity<OrderDto> updateOrder(@PathVariable(name = "id") long orderId, @RequestBody OrderDto orderDto) {
         return new ResponseEntity<>(orderService.updateOrder(orderId, orderDto), HttpStatus.OK);
