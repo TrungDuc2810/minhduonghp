@@ -25,6 +25,6 @@ public class OrderDetail {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
     public double getTotalMoney() {
-        return this.quantity * this.product.getPrice();
+        return this.quantity * this.product.getExportPrice();
     }
 }

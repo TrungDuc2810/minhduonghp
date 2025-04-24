@@ -31,6 +31,14 @@ public class WarehouseTransaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_type_id")
     private WarehouseTransactionType transactionType;
+    @Column(name = "created_by")
+    private String createdBy;
+    @Column(name = "participant")
+    private String participant;
+    @Column(name = "storekeeper")
+    private String storekeeper;
+    @Column(name = "accountant")
+    private String accountant;
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now().toString();

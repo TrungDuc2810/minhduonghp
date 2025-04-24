@@ -42,7 +42,7 @@ public class PostController {
     }
 
     public String uploadThumbnail(MultipartFile file) throws IOException {
-        String uploadDir = "D://OneDrive//blog-frontend//my-blog//public//img//";
+        String uploadDir = "D://OneDrive//frontend//public//";
         File uploadDirFile = new File(uploadDir);
         if (!uploadDirFile.exists()) {
             uploadDirFile.mkdirs();
@@ -54,7 +54,7 @@ public class PostController {
         File destinationFile = new File(filePath);
         file.transferTo(destinationFile);
 
-        return "/img/" + fileName;
+        return fileName;
     }
 
     @GetMapping

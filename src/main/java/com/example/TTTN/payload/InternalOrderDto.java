@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class WarehouseTransferDto {
+public class InternalOrderDto {
     private long id;
     private int quantity;
     private String createdAt;

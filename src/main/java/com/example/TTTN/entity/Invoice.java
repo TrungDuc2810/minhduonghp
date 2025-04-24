@@ -28,6 +28,9 @@ public class Invoice {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type")
+    private PaymentType paymentType;
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now().toString();
