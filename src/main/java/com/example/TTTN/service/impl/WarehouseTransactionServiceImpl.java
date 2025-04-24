@@ -122,6 +122,10 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                 productRepository.save(product);
             }
             warehouseTransaction.setStatus(status);
+            warehouseTransaction.setCreatedBy(warehouseTransactionDto.getCreatedBy());
+            warehouseTransaction.setParticipant(warehouseTransactionDto.getParticipant());
+            warehouseTransaction.setStorekeeper(warehouseTransactionDto.getStorekeeper());
+            warehouseTransaction.setAccountant(warehouseTransactionDto.getAccountant());
         }
         return mapToDto(warehouseTransactionRepository.save(warehouseTransaction));
     }

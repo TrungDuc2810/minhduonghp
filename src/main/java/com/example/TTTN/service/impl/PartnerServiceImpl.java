@@ -95,6 +95,8 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setAddress(partnerDto.getAddress());
         partner.setEmail(partnerDto.getEmail());
         partner.setPhone(partnerDto.getPhone());
+        partner.setTaxCode(partnerDto.getTaxCode());
+        partner.setOrganization(partnerDto.getOrganization());
         partner.setPartnerType(partnerType);
 
         partnerRepository.save(partner);

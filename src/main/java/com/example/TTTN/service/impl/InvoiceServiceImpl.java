@@ -122,7 +122,6 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceType invoiceType = invoiceTypeRepository.findById(invoiceDto.getInvoiceTypeId()).orElseThrow(()
                 -> new ResourceNotFoundException("Invoice type", "id", String.valueOf(invoiceDto.getInvoiceTypeId())));
 
-
         double oldMoneyAmount = invoice.getMoneyAmount();
         double newMoneyAmount = invoiceDto.getMoneyAmount();
         double restMoneyAmount = Math.abs(oldMoneyAmount - newMoneyAmount);
@@ -143,6 +142,12 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setMoneyAmount(invoiceDto.getMoneyAmount());
         invoice.setInvoiceType(invoiceType);
         invoice.setOrder(order);
+
+        if (invoiceDto.getPaymentType().equalsIgnoreCase("Tiền mặt")) {
+            invoice.setPaymentType(PaymentType.CASH);
+        } else {
+            invoice.setPaymentType(PaymentType.TRANSFER);
+        }
 
         invoiceRepository.save(invoice);
 

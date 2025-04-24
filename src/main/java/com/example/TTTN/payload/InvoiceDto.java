@@ -1,5 +1,6 @@
 package com.example.TTTN.payload;
 
+import com.example.TTTN.entity.PaymentType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,4 +17,5 @@ public class InvoiceDto {
     private String createdAt;
     private long invoiceTypeId;
     private long orderId;
+    private String paymentType;
 }
