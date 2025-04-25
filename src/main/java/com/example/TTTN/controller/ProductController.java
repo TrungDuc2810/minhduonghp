@@ -25,7 +25,7 @@ public class ProductController {
 
 //    @PreAuthorize("hasRole('ADMIN_K')")
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<ProductDto> createPost(@RequestPart("product") ProductDto productDto,
+    public ResponseEntity<ProductDto> createProduct(@RequestPart("product") ProductDto productDto,
                                               @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
         try {
             if (thumbnail != null && !thumbnail.isEmpty()) {
