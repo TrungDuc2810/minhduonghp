@@ -37,8 +37,6 @@ public class PostController {
             System.out.println(e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-
     }
 
     public String uploadThumbnail(MultipartFile file) throws IOException {

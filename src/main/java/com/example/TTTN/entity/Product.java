@@ -25,6 +25,8 @@ public class Product {
     private double exportPrice;
     @Column(name = "quantity", nullable = false)
     private int quantity;
+    @Column(name = "thumbnail")
+    private String thumbnail;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_type_id")
     private ProductType productType;

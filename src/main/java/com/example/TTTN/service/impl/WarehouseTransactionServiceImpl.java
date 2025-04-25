@@ -50,83 +50,101 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
 
     @Override
     @Transactional
-    public WarehouseTransactionDto createWarehouseTransaction(WarehouseTransactionDto warehouseTransactionDto) {
-        WarehouseTransaction warehouseTransaction = mapToEntity(warehouseTransactionDto);
+    public WarehouseTransactionDto createWarehouseTransaction(WarehouseTransactionDto dto) {
+        WarehouseTransaction entity = mapToEntity(dto);
 
-        Order order = orderRepository.findById(warehouseTransactionDto.getOrderId()).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(warehouseTransactionDto.getOrderId())));
+        Order order = orderRepository.findById(dto.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(dto.getOrderId())));
+        Status status = statusRepository.findById(dto.getStatusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Status", "id", String.valueOf(dto.getStatusId())));
+        WarehouseTransactionType type = warehouseTransactionTypeRepository.findById(dto.getTransactionTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction Type", "id", String.valueOf(dto.getTransactionTypeId())));
 
-        Status status = statusRepository.findByName("Đã hoàn thành");
-        WarehouseTransactionType warehouseTransactionType = warehouseTransactionTypeRepository.findById(warehouseTransactionDto.getTransactionTypeId()).orElseThrow(()
-                -> new ResourceNotFoundException("Warehouse Transaction Type", "id", String.valueOf(warehouseTransactionDto.getTransactionTypeId())));
-        if (warehouseTransactionDto.getStatusId() == status.getId()) {
-            long warehouseId = warehouseTransactionDto.getWarehouseId();
-            List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
+        long warehouseId = dto.getWarehouseId();
+        List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
 
-            for (OrderDetail orderDetail : orderDetails) {
-                long productId = orderDetail.getProduct().getId();
-                int quantity = orderDetail.getQuantity();
+        boolean isImport = type.getName().equalsIgnoreCase("Nhập");
+        boolean isExport = type.getName().equalsIgnoreCase("Xuất");
+        String statusName = status.getName();
 
-                WarehouseProduct warehouseProduct = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
+        for (OrderDetail detail : orderDetails) {
+            long productId = detail.getProduct().getId();
+            int quantity = detail.getQuantity();
 
-                Product product = productRepository.findById(productId).orElseThrow(()
-                        -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+            WarehouseProduct warehouseProduct = warehouseProductRepository.
+                    findByWarehouseIdAndProductId(warehouseId, productId);
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
 
-                if (warehouseTransactionType.getName().equalsIgnoreCase("Nhập kho")) {
-                    warehouseProduct.setQuantity(warehouseProduct.getQuantity() + quantity);
-                    product.setQuantity(product.getQuantity() + quantity);
-                } else {
-                    warehouseProduct.setQuantity(warehouseProduct.getQuantity() - quantity);
-                    product.setQuantity(product.getQuantity() - quantity);
-                }
-                warehouseProductRepository.save(warehouseProduct);
-                productRepository.save(product);
+            if (isImport && statusName.equalsIgnoreCase("Đã hoàn thành")) {
+                updateStock(warehouseId, productId, quantity);
+            }
+            if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành")
+                    || statusName.equalsIgnoreCase("Đang xử lý"))) {
+                updateStock(warehouseId, productId, -quantity);
+            }
+            if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
+                updateStock(warehouseId, productId, quantity);
             }
         }
-        return mapToDto(warehouseTransactionRepository.save(warehouseTransaction));
+        return mapToDto(warehouseTransactionRepository.save(entity));
+    }
+
+    public void updateStock(long warehouseId, long productId, int quantityChange) {
+        WarehouseProduct wp = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+
+        wp.setQuantity(wp.getQuantity() + quantityChange);
+        product.setQuantity(product.getQuantity() + quantityChange);
+
+        warehouseProductRepository.save(wp);
+        productRepository.save(product);
     }
 
     @Override
     @Transactional
-    public WarehouseTransactionDto updateWarehouseTransaction(long id, WarehouseTransactionDto warehouseTransactionDto) {
-        WarehouseTransaction warehouseTransaction = warehouseTransactionRepository.findById(id).orElseThrow(()
-                -> new ResourceNotFoundException("Warehouse transaction", "id", String.valueOf(id)));
+    public WarehouseTransactionDto updateWarehouseTransaction(long id, WarehouseTransactionDto dto) {
+        WarehouseTransaction warehouseTransaction = warehouseTransactionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse transaction", "id", String.valueOf(id)));
 
-        Order order = orderRepository.findById(warehouseTransactionDto.getOrderId()).orElseThrow(()
-                -> new ResourceNotFoundException("Order", "id", String.valueOf(warehouseTransactionDto.getOrderId())));
+        Order order = orderRepository.findById(dto.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(dto.getOrderId())));
 
-        Status status = statusRepository.findByName("Đã hoàn thành");
-        WarehouseTransactionType warehouseTransactionType = warehouseTransactionTypeRepository.findById(warehouseTransactionDto.getTransactionTypeId()).orElseThrow(()
-                -> new ResourceNotFoundException("Warehouse Transaction Type", "id", String.valueOf(warehouseTransactionDto.getTransactionTypeId())));
-        if (warehouseTransactionDto.getStatusId() == status.getId()) {
-            long warehouseId = warehouseTransactionDto.getWarehouseId();
-            List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
+        Status status = statusRepository.findById(dto.getStatusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Status", "id", String.valueOf(dto.getStatusId())));
 
-            for (OrderDetail orderDetail : orderDetails) {
-                long productId = orderDetail.getProduct().getId();
-                int quantity = orderDetail.getQuantity();
+        WarehouseTransactionType type = warehouseTransactionTypeRepository.findById(dto.getTransactionTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction Type", "id", String.valueOf(dto.getTransactionTypeId())));
 
-                WarehouseProduct warehouseProduct = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
+        long warehouseId = dto.getWarehouseId();
+        List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
 
-                Product product = productRepository.findById(productId).orElseThrow(()
-                        -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+        boolean isImport = type.getName().equalsIgnoreCase("Nhập");
+        boolean isExport = type.getName().equalsIgnoreCase("Xuất");
+        String statusName = status.getName();
 
-                if (warehouseTransactionType.getName().equalsIgnoreCase("Nhập kho")) {
-                    warehouseProduct.setQuantity(warehouseProduct.getQuantity() + quantity);
-                    product.setQuantity(product.getQuantity() + quantity);
-                } else {
-                    warehouseProduct.setQuantity(warehouseProduct.getQuantity() - quantity);
-                    product.setQuantity(product.getQuantity() - quantity);
-                }
-                warehouseProductRepository.save(warehouseProduct);
-                productRepository.save(product);
+        for (OrderDetail detail : orderDetails) {
+            long productId = detail.getProduct().getId();
+            int quantity = detail.getQuantity();
+
+            if (isImport && statusName.equalsIgnoreCase("Đã hoàn thành")) {
+                updateStock(warehouseId, productId, quantity);
             }
-            warehouseTransaction.setStatus(status);
-            warehouseTransaction.setCreatedBy(warehouseTransactionDto.getCreatedBy());
-            warehouseTransaction.setParticipant(warehouseTransactionDto.getParticipant());
-            warehouseTransaction.setStorekeeper(warehouseTransactionDto.getStorekeeper());
-            warehouseTransaction.setAccountant(warehouseTransactionDto.getAccountant());
+            if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành") ||
+                    statusName.equalsIgnoreCase("Đang xử lý"))) {
+                updateStock(warehouseId, productId, -quantity);
+            }
+            if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
+                updateStock(warehouseId, productId, quantity);
+            }
         }
+        warehouseTransaction.setStatus(status);
+        warehouseTransaction.setCreatedBy(dto.getCreatedBy());
+        warehouseTransaction.setParticipant(dto.getParticipant());
+        warehouseTransaction.setStorekeeper(dto.getStorekeeper());
+        warehouseTransaction.setAccountant(dto.getAccountant());
+
         return mapToDto(warehouseTransactionRepository.save(warehouseTransaction));
     }
 

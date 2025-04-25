@@ -15,6 +15,7 @@ public class ProductDto {
     private double importPrice;
     private double exportPrice;
     private int quantity;
+    private String thumbnail;
     private long productTypeId;
     private long productUnitId;
     private List<WarehouseProductDto> warehouseProducts;
