@@ -51,79 +51,80 @@ public class InternalOrderServiceImpl implements InternalOrderService {
     public InternalOrderDto createInternalOrder(InternalOrderDto internalOrderDto) {
         InternalOrder internalOrder = mapToEntity(internalOrderDto);
 
-        warehouseRepository.findById(internalOrderDto.getSourceWarehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(internalOrderDto.getSourceWarehouseId())));
-        warehouseRepository.findById(internalOrderDto.getDestinationWarehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(internalOrderDto.getDestinationWarehouseId())));
-        productRepository.findById(internalOrderDto.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(internalOrderDto.getProductId())));
+        Warehouse sourceWarehouse = warehouseRepository.findById(internalOrderDto.getSourceWarehouseId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(internalOrderDto.getSourceWarehouseId())));
 
-        Status status = statusRepository.findById(internalOrderDto.getStatusId())
-                .orElseThrow(() -> new ResourceNotFoundException("Status", "id", String.valueOf(internalOrderDto.getStatusId())));
+        Warehouse destWarehouse = warehouseRepository.findById(internalOrderDto.getDestinationWarehouseId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(internalOrderDto.getDestinationWarehouseId())));
 
-        adjustStockForInternalOrder(
-                status.getName(), internalOrderDto.getSourceWarehouseId(),
-                internalOrderDto.getDestinationWarehouseId(),
-                internalOrderDto.getProductId(), internalOrderDto.getQuantity()
-        );
+        Product product = productRepository.findById(internalOrderDto.getProductId()).orElseThrow(()
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(internalOrderDto.getProductId())));
+
+        Status status = statusRepository.findByName("Đã hoàn thành");
+        if (internalOrderDto.getStatusId() == status.getId()) {
+            WarehouseProduct sourceProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+                    internalOrderDto.getSourceWarehouseId(), internalOrderDto.getProductId());
+            WarehouseProduct destProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+                    internalOrderDto.getDestinationWarehouseId(), internalOrderDto.getProductId());
+
+            if (sourceProduct == null || destProduct == null) {
+                throw new ResourceNotFoundException("Warehouse product", "source or destination", "Not found");
+            }
+
+            if (sourceProduct.getQuantity() < internalOrderDto.getQuantity()) {
+                throw new IllegalArgumentException("Source warehouse does not have enough quantity.");
+            }
+
+            sourceProduct.setQuantity(sourceProduct.getQuantity() - internalOrderDto.getQuantity());
+            destProduct.setQuantity(destProduct.getQuantity() + internalOrderDto.getQuantity());
+
+            warehouseProductRepository.save(sourceProduct);
+            warehouseProductRepository.save(destProduct);
+        }
 
         return mapToDto(internalOrderRepository.save(internalOrder));
     }
 
-    public void adjustStockForInternalOrder(String statusName, long sourceWarehouseId,
-                                            long destWarehouseId, long productId, int quantity) {
-        WarehouseProduct source = warehouseProductRepository.findByWarehouseIdAndProductId(sourceWarehouseId, productId);
-        WarehouseProduct dest = warehouseProductRepository.findByWarehouseIdAndProductId(destWarehouseId, productId);
-
-        if (source == null) {
-            throw new ResourceNotFoundException("Warehouse product", "source", String.valueOf(sourceWarehouseId));
-        }
-        if (statusName.equalsIgnoreCase("Đã hoàn thành")) {
-            if (dest == null) {
-                throw new ResourceNotFoundException("Warehouse product", "destination", String.valueOf(destWarehouseId));
-            }
-            if (source.getQuantity() < quantity) {
-                throw new IllegalArgumentException("Không đủ hàng trong kho nguồn.");
-            }
-            source.setQuantity(source.getQuantity() - quantity);
-            dest.setQuantity(dest.getQuantity() + quantity);
-            warehouseProductRepository.save(source);
-            warehouseProductRepository.save(dest);
-        } else if (statusName.equalsIgnoreCase("Đang xử lý")) {
-            if (source.getQuantity() < quantity) {
-                throw new IllegalArgumentException("Không đủ hàng để lock.");
-            }
-            source.setQuantity(source.getQuantity() - quantity);
-            warehouseProductRepository.save(source);
-        } else if (statusName.equalsIgnoreCase("Không thành công")) {
-            source.setQuantity(source.getQuantity() + quantity);
-            warehouseProductRepository.save(source);
-        }
-    }
-
     @Override
     @Transactional
-    public InternalOrderDto updateInternalOrder(long id, InternalOrderDto dto) {
+    public InternalOrderDto updateInternalOrder(long id, InternalOrderDto internalOrderDto) {
         InternalOrder internalOrder = internalOrderRepository.findById(id).orElseThrow(()
-                -> new ResourceNotFoundException("Internal Order", "id", String.valueOf(id)));
+                -> new ResourceNotFoundException("Warehouse transfer", "id", String.valueOf(id)));
 
-        Warehouse sourceWarehouse = warehouseRepository.findById(dto.getSourceWarehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(dto.getSourceWarehouseId())));
-        Warehouse destWarehouse = warehouseRepository.findById(dto.getDestinationWarehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(dto.getDestinationWarehouseId())));
+        Warehouse sourceWarehouse = warehouseRepository.findById(internalOrderDto.getSourceWarehouseId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(internalOrderDto.getSourceWarehouseId())));
 
-        Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(dto.getProductId())));
-        Status status = statusRepository.findById(dto.getStatusId())
-                .orElseThrow(() -> new ResourceNotFoundException("Status", "id", String.valueOf(dto.getStatusId())));
+        Warehouse destWarehouse = warehouseRepository.findById(internalOrderDto.getDestinationWarehouseId()).orElseThrow(()
+                -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(internalOrderDto.getDestinationWarehouseId())));
 
-        adjustStockForInternalOrder(status.getName(), dto.getSourceWarehouseId(),
-                dto.getDestinationWarehouseId(), dto.getProductId(), dto.getQuantity()
-        );
+        Product product = productRepository.findById(internalOrderDto.getProductId()).orElseThrow(()
+                -> new ResourceNotFoundException("Product", "id", String.valueOf(internalOrderDto.getProductId())));
+
+        Status status = statusRepository.findByName("Đã hoàn thành");
+        if (internalOrderDto.getStatusId() == status.getId()) {
+            WarehouseProduct sourceProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+                    internalOrderDto.getSourceWarehouseId(), internalOrderDto.getProductId());
+            WarehouseProduct destProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+                    internalOrderDto.getDestinationWarehouseId(), internalOrderDto.getProductId());
+
+            if (sourceProduct == null || destProduct == null) {
+                throw new ResourceNotFoundException("Warehouse product", "source or destination", "Not found");
+            }
+
+            if (sourceProduct.getQuantity() < internalOrderDto.getQuantity()) {
+                throw new IllegalArgumentException("Source warehouse does not have enough quantity.");
+            }
+
+            sourceProduct.setQuantity(sourceProduct.getQuantity() - internalOrderDto.getQuantity());
+            destProduct.setQuantity(destProduct.getQuantity() + internalOrderDto.getQuantity());
+
+            warehouseProductRepository.save(sourceProduct);
+            warehouseProductRepository.save(destProduct);
+        }
 
         internalOrder.setStatus(status);
         internalOrder.setProduct(product);
-        internalOrder.setQuantity(dto.getQuantity());
+        internalOrder.setQuantity(internalOrderDto.getQuantity());
         internalOrder.setSourceWarehouse(sourceWarehouse);
         internalOrder.setDestinationWarehouse(destWarehouse);
 
