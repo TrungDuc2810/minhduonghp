@@ -26,9 +26,10 @@ public class ProductServiceImpl implements ProductService {
     private final WarehouseProductRepository warehouseProductRepository;
 
     public ProductServiceImpl(ProductRepository productRepository,
-                              ModelMapper modelMapper,
-                              ProductTypeRepository productTypeRepository,
-                              ProductUnitRepository productUnitRepository, WarehouseRepository warehouseRepository, WarehouseProductRepository warehouseProductRepository) {
+            ModelMapper modelMapper,
+            ProductTypeRepository productTypeRepository,
+            ProductUnitRepository productUnitRepository, WarehouseRepository warehouseRepository,
+            WarehouseProductRepository warehouseProductRepository) {
         this.productRepository = productRepository;
         this.modelMapper = modelMapper;
         this.productTypeRepository = productTypeRepository;
@@ -70,11 +71,11 @@ public class ProductServiceImpl implements ProductService {
         return mapToDto(product);
     }
 
-
     @Override
     public ListResponse<ProductDto> getAllProducts(int pageNo, int pageSize, String sortBy, String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
-                ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
 
         PageRequest pageRequest = PageRequest.of(pageNo, pageSize, sort);
 
@@ -82,13 +83,15 @@ public class ProductServiceImpl implements ProductService {
 
         List<Product> listOfProducts = products.getContent();
 
+        System.err.println(listOfProducts);
+
         List<ProductDto> content = listOfProducts.stream().map(this::mapToDto).toList();
 
         ListResponse<ProductDto> productResponse = new ListResponse<>();
         productResponse.setContent(content);
         productResponse.setPageNo(products.getNumber());
         productResponse.setPageSize(products.getSize());
-        productResponse.setTotalElements((int)products.getTotalElements());
+        productResponse.setTotalElements((int) products.getTotalElements());
         productResponse.setTotalPages(products.getTotalPages());
         productResponse.setLast(products.isLast());
 
@@ -97,8 +100,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto getProductById(long id) {
-        Product product = productRepository.findById(id).orElseThrow(()
-                -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
 
         return mapToDto(product);
     }
@@ -106,14 +109,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDto updateProduct(long productId, ProductDto productDto) {
-        Product product = productRepository.findById(productId).orElseThrow(()
-                -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
 
-        ProductType productType = productTypeRepository.findById(productDto.getProductTypeId()).orElseThrow(() ->
-                new ResourceNotFoundException("Product type", "id", String.valueOf(productDto.getProductTypeId())));
+        ProductType productType = productTypeRepository.findById(productDto.getProductTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product type", "id",
+                        String.valueOf(productDto.getProductTypeId())));
 
-        ProductUnit productUnit = productUnitRepository.findById(productDto.getProductUnitId()).orElseThrow(() ->
-                new ResourceNotFoundException("Product unit", "id", String.valueOf(productDto.getProductUnitId())));
+        ProductUnit productUnit = productUnitRepository.findById(productDto.getProductUnitId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product unit", "id",
+                        String.valueOf(productDto.getProductUnitId())));
 
         product.setName(productDto.getName());
         product.setDescription(productDto.getDescription());
@@ -130,8 +135,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProductById(long id) {
-        Product product = productRepository.findById(id).orElseThrow(()
-                -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(id)));
         productRepository.delete(product);
     }
 }

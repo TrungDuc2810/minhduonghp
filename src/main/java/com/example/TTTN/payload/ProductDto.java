@@ -14,6 +14,7 @@ public class ProductDto {
     private String description;
     private double importPrice;
     private double exportPrice;
+    private double price;
     private int quantity;
     private String thumbnail;
     private long productTypeId;
