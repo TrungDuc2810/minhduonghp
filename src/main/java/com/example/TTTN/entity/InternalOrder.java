@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "warehouse_transfers")
-public class WarehouseTransfer {
+public class InternalOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

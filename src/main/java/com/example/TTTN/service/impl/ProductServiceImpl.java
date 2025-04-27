@@ -105,7 +105,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductDto updateProduct(ProductDto productDto, long productId) {
+    public ProductDto updateProduct(long productId, ProductDto productDto) {
         Product product = productRepository.findById(productId).orElseThrow(()
                 -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
 
@@ -117,7 +117,9 @@ public class ProductServiceImpl implements ProductService {
 
         product.setName(productDto.getName());
         product.setDescription(productDto.getDescription());
-        product.setPrice(productDto.getPrice());
+        product.setImportPrice(productDto.getImportPrice());
+        product.setExportPrice(productDto.getExportPrice());
+        product.setThumbnail(productDto.getThumbnail());
         product.setProductType(productType);
         product.setProductUnit(productUnit);
 

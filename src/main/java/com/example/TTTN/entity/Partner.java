@@ -26,8 +26,12 @@ public class Partner {
     private String phone;
     @Column(name = "email")
     private String email;
+    @Column(name = "tax_code")
+    private String taxCode;
     @Column(name = "debt")
     private double debt;
+    @Column(name = "organization")
+    private String organization;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partner_type_id", nullable = false)
     private PartnerType partnerType;
