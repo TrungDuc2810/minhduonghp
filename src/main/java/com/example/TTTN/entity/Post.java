@@ -20,7 +20,7 @@ public class Post {
     private long id;
     @Column(name = "title")
     private String title;
-    @Column(name = "content")
+    @Lob
     private String content;
     @Column(name = "thumbnail")
     private String thumbnail;
