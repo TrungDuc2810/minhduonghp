@@ -15,6 +15,7 @@ public class OrderDto {
     private long id;
     private double totalMoney;
     private double paidMoney;
+    private double profitMoney;
     private String createdAt;
     private long partnerId;
     private long orderStatusId;

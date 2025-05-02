@@ -1,9 +1,8 @@
 package com.example.TTTN.service;
 
 import com.example.TTTN.payload.ListResponse;
-import com.example.TTTN.payload.MonthlyRevenueDto;
 import com.example.TTTN.payload.OrderDto;
-import com.example.TTTN.payload.YearlyRevenueDto;
+import com.example.TTTN.payload.RevenueDto;
 
 public interface OrderService {
     OrderDto createOrder(OrderDto orderDto);
@@ -18,9 +17,9 @@ public interface OrderService {
 
     void deleteOrderById(long orderId);
 
-    ListResponse<MonthlyRevenueDto> getMonthlyRevenue(int year);
+    ListResponse<RevenueDto> getMonthlyRevenue(int year);
 
-    ListResponse<MonthlyRevenueDto> getQuarterlyRevenue(int year);
+    ListResponse<RevenueDto> getQuarterlyRevenue(int year);
 
-    ListResponse<YearlyRevenueDto> getYearRevenue();
+    ListResponse<RevenueDto> getYearRevenue();
 }

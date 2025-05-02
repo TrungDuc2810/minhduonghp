@@ -22,6 +22,7 @@ public class Order {
     private long id;
     private double totalMoney;
     private double paidMoney;
+    private double profitMoney;
     private String createdAt;
     @ManyToOne
     @JoinColumn(name = "partner_id", nullable = false)
@@ -36,6 +37,7 @@ public class Order {
     private List<Invoice> invoices;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderDetail> orderDetails;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now().toString();

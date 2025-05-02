@@ -3,9 +3,8 @@ package com.example.TTTN.service.impl;
 import com.example.TTTN.entity.*;
 import com.example.TTTN.exception.ResourceNotFoundException;
 import com.example.TTTN.payload.ListResponse;
-import com.example.TTTN.payload.MonthlyRevenueDto;
+import com.example.TTTN.payload.RevenueDto;
 import com.example.TTTN.payload.OrderDto;
-import com.example.TTTN.payload.YearlyRevenueDto;
 import com.example.TTTN.repository.OrderRepository;
 import com.example.TTTN.repository.OrderStatusRepository;
 import com.example.TTTN.repository.OrderTypeRepository;
@@ -51,9 +50,11 @@ public class OrderServiceImpl implements OrderService {
         @Override
         @Transactional
         public OrderDto createOrder(OrderDto orderDto) {
+                System.out.println(orderDto.getProfitMoney());
                 OrderStatus orderStatus = orderStatusRepository.findByName("Chưa thanh toán");
                 orderDto.setOrderStatusId(orderStatus.getId());
                 orderDto.setPaidMoney(0);
+                orderDto.setProfitMoney(orderDto.getProfitMoney());
 
                 Partner partner = partnerRepository.findById(orderDto.getPartnerId()).orElseThrow(
                                 () -> new ResourceNotFoundException("Partner", "id",
@@ -186,22 +187,23 @@ public class OrderServiceImpl implements OrderService {
         }
 
         @Override
-        public ListResponse<MonthlyRevenueDto> getMonthlyRevenue(int year) {
+        public ListResponse<RevenueDto> getMonthlyRevenue(int year) {
                 // Lấy dữ liệu từ repository
                 List<Object[]> revenueData = orderRepository.findRevenueByMonth(year);
 
-                // Chuyển đổi sang MonthlyRevenueDto
-                List<MonthlyRevenueDto> revenueList = revenueData.stream()
+                // Chuyển đổi sang RevenueDto
+                List<RevenueDto> revenueList = revenueData.stream()
                                 .map(data -> {
-                                        int resultYear = ((Number) data[0]).intValue();
-                                        int quarter = ((Number) data[1]).intValue();
+                                        System.out.println(data[3]);
+                                        String label = "Tháng " + ((Number) data[1]).intValue();
                                         BigDecimal revenue = new BigDecimal(data[2].toString());
-                                        return new MonthlyRevenueDto(resultYear, quarter, revenue); // truyền BigDecimal
+                                        BigDecimal profit = new BigDecimal(data[3].toString());
+                                        return new RevenueDto(label, profit.toPlainString(), revenue.toPlainString());
                                 })
                                 .toList();
 
                 // Tạo response
-                ListResponse<MonthlyRevenueDto> response = new ListResponse<>();
+                ListResponse<RevenueDto> response = new ListResponse<>();
                 response.setContent(revenueList);
                 response.setPageNo(0);
                 response.setPageSize(revenueList.size());
@@ -213,22 +215,22 @@ public class OrderServiceImpl implements OrderService {
         }
 
         @Override
-        public ListResponse<MonthlyRevenueDto> getQuarterlyRevenue(int year) {
+        public ListResponse<RevenueDto> getQuarterlyRevenue(int year) {
                 // Lấy dữ liệu từ repository
                 List<Object[]> revenueData = orderRepository.findRevenueByQuarter(year);
 
                 // Chuyển đổi sang DTO
-                List<MonthlyRevenueDto> revenueList = revenueData.stream()
+                List<RevenueDto> revenueList = revenueData.stream()
                                 .map(data -> {
-                                        int resultYear = ((Number) data[0]).intValue();
-                                        int quarter = ((Number) data[1]).intValue();
+                                        String label = "Quý " + ((Number) data[1]).intValue();
                                         BigDecimal revenue = new BigDecimal(data[2].toString());
-                                        return new MonthlyRevenueDto(resultYear, quarter, revenue); // truyền BigDecimal
+                                        BigDecimal profit = new BigDecimal(data[3].toString());
+                                        return new RevenueDto(label, profit.toPlainString(), revenue.toPlainString());
                                 })
                                 .toList();
 
                 // Tạo response
-                ListResponse<MonthlyRevenueDto> response = new ListResponse<>();
+                ListResponse<RevenueDto> response = new ListResponse<>();
                 response.setContent(revenueList);
                 response.setPageNo(0);
                 response.setPageSize(revenueList.size());
@@ -240,18 +242,19 @@ public class OrderServiceImpl implements OrderService {
         }
 
         @Override
-        public ListResponse<YearlyRevenueDto> getYearRevenue() {
+        public ListResponse<RevenueDto> getYearRevenue() {
                 List<Object[]> revenueData = orderRepository.findRevenueByYear();
 
-                List<YearlyRevenueDto> revenueList = revenueData.stream()
+                List<RevenueDto> revenueList = revenueData.stream()
                                 .map(data -> {
-                                        int year = ((Number) data[0]).intValue();
+                                        String label = "Năm " + ((Number) data[0]).intValue();
                                         BigDecimal revenue = new BigDecimal(data[1].toString());
-                                        return new YearlyRevenueDto(year, revenue.toPlainString());
+                                        BigDecimal profit = new BigDecimal(data[2].toString());
+                                        return new RevenueDto(label, profit.toPlainString(), revenue.toPlainString());
                                 })
                                 .toList();
 
-                ListResponse<YearlyRevenueDto> response = new ListResponse<>();
+                ListResponse<RevenueDto> response = new ListResponse<>();
                 response.setContent(revenueList);
                 response.setPageNo(0);
                 response.setPageSize(revenueList.size());
