@@ -6,6 +6,7 @@ import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
 import com.example.TTTN.repository.*;
 import com.example.TTTN.service.ProductService;
+import com.example.TTTN.utils.PaginationUtils;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -94,6 +95,20 @@ public class ProductServiceImpl implements ProductService {
         productResponse.setLast(products.isLast());
 
         return productResponse;
+    }
+
+    @Override
+    public ListResponse<ProductDto> getProductsByProductTypeId(int pageNo, int pageSize,
+                                                               String sortBy, String sortDir,
+                                                               long productTypeId) {
+        productTypeRepository.findById(productTypeId).orElseThrow(()
+                -> new ResourceNotFoundException("Product type", "id", String.valueOf(productTypeId)));
+
+        PageRequest pageRequest = PaginationUtils.createPageRequest(pageNo, pageSize, sortBy, sortDir);
+
+        Page<Product> products = productRepository.findProductsByProductTypeId(productTypeId, pageRequest);
+
+        return PaginationUtils.toListResponse(products, this::mapToDto);
     }
 
     @Override

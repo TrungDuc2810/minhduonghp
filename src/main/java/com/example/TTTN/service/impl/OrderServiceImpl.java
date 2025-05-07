@@ -92,8 +92,8 @@ public class OrderServiceImpl implements OrderService {
         }
 
         @Override
-        public ListResponse<OrderDto> getOrdersByPartnerId(long id, int pageNo, int pageSize, String sortBy,
-                        String sortDir) {
+        public ListResponse<OrderDto> getOrdersByPartnerId(long id, int pageNo, int pageSize,
+                                                           String sortBy, String sortDir) {
                 partnerRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(id)));
 

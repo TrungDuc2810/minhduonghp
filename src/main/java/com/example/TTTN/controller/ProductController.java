@@ -40,6 +40,17 @@ public class ProductController {
         return productService.getAllProducts(pageNo, pageSize, sortBy, sortDir);
     }
 
+    @GetMapping("/product-types/{id}")
+    public ListResponse<ProductDto> getProductsByProductTypeId(
+            @RequestParam(value = "pageNo", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER, required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir,
+            @PathVariable(name = "id") long productTypeId
+    ) {
+        return productService.getProductsByProductTypeId(pageNo, pageSize, sortBy, sortDir, productTypeId);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> getProductById(@PathVariable(name = "id") long id) {
         try {
