@@ -1,9 +1,8 @@
 package com.example.TTTN.controller;
 
 import com.example.TTTN.payload.ListResponse;
-import com.example.TTTN.payload.MonthlyRevenueDto;
 import com.example.TTTN.payload.OrderDto;
-import com.example.TTTN.payload.YearlyRevenueDto;
+import com.example.TTTN.payload.RevenueDto;
 import com.example.TTTN.service.OrderService;
 import com.example.TTTN.utils.AppConstants;
 import org.springframework.http.HttpStatus;
@@ -64,17 +63,17 @@ public class OrderController {
     }
 
     @GetMapping("/monthly-revenue")
-    public ListResponse<MonthlyRevenueDto> getMonthlyRevenue(@RequestParam() int year) {
+    public ListResponse<RevenueDto> getMonthlyRevenue(@RequestParam() int year) {
         return orderService.getMonthlyRevenue(year);
     }
 
     @GetMapping("/quarterly-revenue")
-    public ListResponse<MonthlyRevenueDto> getQuarterlyRevenue(@RequestParam() int year) {
+    public ListResponse<RevenueDto> getQuarterlyRevenue(@RequestParam() int year) {
         return orderService.getQuarterlyRevenue(year);
     }
 
     @GetMapping("/year-revenue")
-    public ListResponse<YearlyRevenueDto> getYearRevenue() {
+    public ListResponse<RevenueDto> getYearRevenue() {
         return orderService.getYearRevenue();
     }
 }
