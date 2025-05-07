@@ -9,7 +9,6 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Table(name = "products")
 public class Product {
     @Id

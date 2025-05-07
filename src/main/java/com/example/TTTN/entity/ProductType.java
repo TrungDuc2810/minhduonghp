@@ -1,6 +1,5 @@
 package com.example.TTTN.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,8 +17,6 @@ public class ProductType {
     private long id;
     @Column(name = "name", unique = true, nullable = false)
     private String name;
-    @JsonIgnore
-    @ToString.Exclude
     @OneToMany(mappedBy = "productType", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products;
 }

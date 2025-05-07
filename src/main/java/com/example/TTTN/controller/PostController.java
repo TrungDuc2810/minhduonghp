@@ -34,7 +34,6 @@ public class PostController {
             }
             return new ResponseEntity<>(postService.createPost(postDto), HttpStatus.CREATED);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -84,7 +83,6 @@ public class PostController {
             PostDto updatedPost = postService.updatePost(postId, postDto);
             return new ResponseEntity<>(updatedPost, HttpStatus.OK);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

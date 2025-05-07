@@ -18,8 +18,6 @@ public class ProductUnit {
     private long id;
     @Column(name = "name", unique = true, nullable = false)
     private String name;
-    @JsonIgnore
-    @ToString.Exclude
     @OneToMany(mappedBy = "productUnit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products;
 }

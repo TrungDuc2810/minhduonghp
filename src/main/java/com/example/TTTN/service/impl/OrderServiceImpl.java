@@ -50,7 +50,6 @@ public class OrderServiceImpl implements OrderService {
         @Override
         @Transactional
         public OrderDto createOrder(OrderDto orderDto) {
-                System.out.println(orderDto.getProfitMoney());
                 OrderStatus orderStatus = orderStatusRepository.findByName("Chưa thanh toán");
                 orderDto.setOrderStatusId(orderStatus.getId());
                 orderDto.setPaidMoney(0);

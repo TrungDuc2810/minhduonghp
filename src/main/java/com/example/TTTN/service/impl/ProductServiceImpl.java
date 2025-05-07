@@ -83,8 +83,6 @@ public class ProductServiceImpl implements ProductService {
 
         List<Product> listOfProducts = products.getContent();
 
-        System.err.println(listOfProducts);
-
         List<ProductDto> content = listOfProducts.stream().map(this::mapToDto).toList();
 
         ListResponse<ProductDto> productResponse = new ListResponse<>();
