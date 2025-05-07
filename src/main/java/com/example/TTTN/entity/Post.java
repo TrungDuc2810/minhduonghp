@@ -21,7 +21,7 @@ public class Post {
     @Column(name = "title")
     private String title;
     @Lob
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
     @Column(name = "thumbnail")
     private String thumbnail;
