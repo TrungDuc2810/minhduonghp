@@ -12,6 +12,7 @@ import lombok.Setter;
 public class OrderDetailDto {
     private long id;
     private int quantity;
+    private double unit_price;
     private long orderId;
     private long productId;
 }

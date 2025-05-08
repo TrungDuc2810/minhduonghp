@@ -18,6 +18,8 @@ public class OrderDetail {
     private long id;
     @Column(name = "quantity")
     private int quantity;
+    @Column(name = "unit_price")
+    private double unit_price;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
@@ -25,6 +27,6 @@ public class OrderDetail {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
     public double getTotalMoney() {
-        return this.quantity * this.product.getExportPrice();
+        return this.quantity * this.unit_price;
     }
 }
