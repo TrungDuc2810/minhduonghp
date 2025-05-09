@@ -11,8 +11,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "about_config")
-public class AboutConfig {
+@Table(name = "service_contents")
+public class ServiceContent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -21,5 +21,5 @@ public class AboutConfig {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String description;
     @Column(nullable = false)
-    private String icon;
+    private String thumbnail;
 }

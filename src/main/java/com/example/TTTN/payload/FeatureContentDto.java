@@ -1,12 +1,11 @@
 package com.example.TTTN.payload;
 
-import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data
-public class HomeConfigDto {
+public class FeatureContentDto {
     private long id;
     private String title;
     private String description;
-    private String thumbnail;
+    private String icon;
 }

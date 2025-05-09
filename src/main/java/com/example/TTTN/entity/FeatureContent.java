@@ -11,8 +11,8 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "home_config")
-public class HomeConfig {
+@Table(name = "feature_contents")
+public class FeatureContent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -21,5 +21,5 @@ public class HomeConfig {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String description;
     @Column(nullable = false)
-    private String thumbnail;
+    private String icon;
 }

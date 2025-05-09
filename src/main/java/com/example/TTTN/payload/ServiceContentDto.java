@@ -3,9 +3,9 @@ package com.example.TTTN.payload;
 import lombok.Data;
 
 @Data
-public class AboutConfigDto {
+public class ServiceContentDto {
     private long id;
     private String title;
     private String description;
-    private String icon;
+    private String thumbnail;
 }
