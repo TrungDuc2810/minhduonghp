@@ -81,6 +81,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
             }
             if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành")
                     || statusName.equalsIgnoreCase("Đang xử lý"))) {
+                validateSufficientStock(warehouseId, productId, quantity);
                 updateStock(warehouseId, productId, -quantity);
             }
             if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
@@ -101,6 +102,17 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
         warehouseProductRepository.save(wp);
         productRepository.save(product);
     }
+
+    public void validateSufficientStock(long warehouseId, long productId, int requiredQuantity) {
+        WarehouseProduct wp = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
+        int available = (wp != null) ? wp.getQuantity() : 0;
+
+        if (available < requiredQuantity) {
+            throw new IllegalStateException("Kho ID " + warehouseId + " không đủ số lượng cho sản phẩm ID " + productId
+                    + ". Hiện có " + available + ", yêu cầu " + requiredQuantity + ". Vui lòng tạo chuyển kho trước.");
+        }
+    }
+
 
     @Override
     @Transactional
@@ -133,6 +145,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
             }
             if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành") ||
                     statusName.equalsIgnoreCase("Đang xử lý"))) {
+                validateSufficientStock(warehouseId, productId, quantity);
                 updateStock(warehouseId, productId, -quantity);
             }
             if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
