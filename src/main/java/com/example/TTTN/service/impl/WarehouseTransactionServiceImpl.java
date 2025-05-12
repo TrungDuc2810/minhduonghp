@@ -1,6 +1,7 @@
 package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.*;
+import com.example.TTTN.exception.BadRequestException;
 import com.example.TTTN.exception.ResourceNotFoundException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.WarehouseTransactionDto;
@@ -24,13 +25,14 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
     private final WarehouseProductRepository warehouseProductRepository;
     private final ProductRepository productRepository;
     private final WarehouseTransactionTypeRepository warehouseTransactionTypeRepository;
+    private final WarehouseRepository warehouseRepository;
 
     public WarehouseTransactionServiceImpl(WarehouseTransactionRepository warehouseTransactionRepository,
                                            ModelMapper modelMapper,
                                            StatusRepository statusRepository,
                                            OrderRepository orderRepository,
                                            WarehouseProductRepository warehouseProductRepository,
-                                           ProductRepository productRepository, WarehouseTransactionTypeRepository warehouseTransactionTypeRepository) {
+                                           ProductRepository productRepository, WarehouseTransactionTypeRepository warehouseTransactionTypeRepository, WarehouseRepository warehouseRepository) {
         this.warehouseTransactionRepository = warehouseTransactionRepository;
         this.modelMapper = modelMapper;
         this.statusRepository = statusRepository;
@@ -38,6 +40,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
         this.warehouseProductRepository = warehouseProductRepository;
         this.productRepository = productRepository;
         this.warehouseTransactionTypeRepository = warehouseTransactionTypeRepository;
+        this.warehouseRepository = warehouseRepository;
     }
 
     private WarehouseTransactionDto mapToDto(WarehouseTransaction warehouseTransaction) {
@@ -81,7 +84,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
             }
             if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành")
                     || statusName.equalsIgnoreCase("Đang xử lý"))) {
-                validateSufficientStock(warehouseId, productId, quantity);
+                validateStock(warehouseId, productId, quantity);
                 updateStock(warehouseId, productId, -quantity);
             }
             if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
@@ -103,16 +106,18 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
         productRepository.save(product);
     }
 
-    public void validateSufficientStock(long warehouseId, long productId, int requiredQuantity) {
+    public void validateStock(long warehouseId, long productId, int requiredQuantity) {
         WarehouseProduct wp = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
+        Warehouse wh = warehouseRepository.findById(warehouseId).orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(warehouseId)));
+        Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+
         int available = (wp != null) ? wp.getQuantity() : 0;
 
         if (available < requiredQuantity) {
-            throw new IllegalStateException("Kho ID " + warehouseId + " không đủ số lượng cho sản phẩm ID " + productId
-                    + ". Hiện có " + available + ", yêu cầu " + requiredQuantity + ". Vui lòng tạo chuyển kho trước.");
+            throw new BadRequestException(wh.getName().toUpperCase() + " không đủ số lượng cho sản phẩm " + product.getName().toUpperCase()
+                    + ". Vui lòng tạo chuyển kho trước hoặc nhập thêm số lượng.");
         }
     }
-
 
     @Override
     @Transactional
@@ -145,7 +150,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
             }
             if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành") ||
                     statusName.equalsIgnoreCase("Đang xử lý"))) {
-                validateSufficientStock(warehouseId, productId, quantity);
+                validateStock(warehouseId, productId, quantity);
                 updateStock(warehouseId, productId, -quantity);
             }
             if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
