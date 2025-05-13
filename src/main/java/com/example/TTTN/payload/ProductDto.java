@@ -12,7 +12,6 @@ public class ProductDto {
     private long id;
     private String name;
     private String description;
-    private double importPrice;
     private double exportPrice;
     private double price;
     private int quantity;

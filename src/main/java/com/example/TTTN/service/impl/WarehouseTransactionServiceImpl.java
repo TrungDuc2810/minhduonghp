@@ -26,13 +26,15 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
     private final ProductRepository productRepository;
     private final WarehouseTransactionTypeRepository warehouseTransactionTypeRepository;
     private final WarehouseRepository warehouseRepository;
+    private final ImportBatchRepository importBatchRepository;
+    private final TransactionBatchRepository transactionBatchRepository;
 
     public WarehouseTransactionServiceImpl(WarehouseTransactionRepository warehouseTransactionRepository,
                                            ModelMapper modelMapper,
                                            StatusRepository statusRepository,
                                            OrderRepository orderRepository,
                                            WarehouseProductRepository warehouseProductRepository,
-                                           ProductRepository productRepository, WarehouseTransactionTypeRepository warehouseTransactionTypeRepository, WarehouseRepository warehouseRepository) {
+                                           ProductRepository productRepository, WarehouseTransactionTypeRepository warehouseTransactionTypeRepository, WarehouseRepository warehouseRepository, ImportBatchRepository importBatchRepository, TransactionBatchRepository transactionBatchRepository) {
         this.warehouseTransactionRepository = warehouseTransactionRepository;
         this.modelMapper = modelMapper;
         this.statusRepository = statusRepository;
@@ -41,6 +43,8 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
         this.productRepository = productRepository;
         this.warehouseTransactionTypeRepository = warehouseTransactionTypeRepository;
         this.warehouseRepository = warehouseRepository;
+        this.importBatchRepository = importBatchRepository;
+        this.transactionBatchRepository = transactionBatchRepository;
     }
 
     private WarehouseTransactionDto mapToDto(WarehouseTransaction warehouseTransaction) {
@@ -54,7 +58,9 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
     @Override
     @Transactional
     public WarehouseTransactionDto createWarehouseTransaction(WarehouseTransactionDto dto) {
-        WarehouseTransaction entity = mapToEntity(dto);
+        WarehouseTransaction wt = mapToEntity(dto);
+
+        WarehouseTransaction savedWt = warehouseTransactionRepository.save(wt);
 
         Order order = orderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(dto.getOrderId())));
@@ -62,48 +68,87 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", String.valueOf(dto.getStatusId())));
         WarehouseTransactionType type = warehouseTransactionTypeRepository.findById(dto.getTransactionTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction Type", "id", String.valueOf(dto.getTransactionTypeId())));
+        Warehouse warehouse = warehouseRepository.findById(dto.getWarehouseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(dto.getWarehouseId())));
 
-        long warehouseId = dto.getWarehouseId();
-        List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
+        double totalRevenue = order.getTotalMoney();
+        double totalCost = 0;
 
         boolean isImport = type.getName().equalsIgnoreCase("Nhập");
         boolean isExport = type.getName().equalsIgnoreCase("Xuất");
         String statusName = status.getName();
 
-        for (OrderDetail detail : orderDetails) {
-            long productId = detail.getProduct().getId();
+        for (OrderDetail detail : order.getOrderDetails()) {
+            Product product = productRepository.findById(detail.getProduct().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(detail.getProduct().getId())));
             int quantity = detail.getQuantity();
 
-            WarehouseProduct warehouseProduct = warehouseProductRepository.
-                    findByWarehouseIdAndProductId(warehouseId, productId);
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+            WarehouseProduct wp = warehouseProductRepository.findByWarehouseIdAndProductId(warehouse.getId(), product.getId());
 
             if (isImport && statusName.equalsIgnoreCase("Đã hoàn thành")) {
-                updateStock(warehouseId, productId, quantity);
+                double unitCost = detail.getUnit_price();
+
+                ImportBatch batch = importBatchRepository.findByProductAndWarehouseAndUnitCost(product, warehouse, unitCost);
+
+                if (batch != null) {
+                    batch.setQuantityRemaining(batch.getQuantityRemaining() + quantity);
+                } else {
+                    batch = new ImportBatch();
+                    batch.setProduct(product);
+                    batch.setWarehouse(warehouse);
+                    batch.setUnitCost(unitCost);
+                    batch.setQuantityRemaining(quantity);
+                }
+                importBatchRepository.save(batch);
+
+                wp.setQuantity(wp.getQuantity() + quantity);
+                warehouseProductRepository.save(wp);
+
+                product.setQuantity(product.getQuantity() + quantity);
+                productRepository.save(product);
             }
+
             if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành")
                     || statusName.equalsIgnoreCase("Đang xử lý"))) {
-                validateStock(warehouseId, productId, quantity);
-                updateStock(warehouseId, productId, -quantity);
-            }
-            if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
-                updateStock(warehouseId, productId, quantity);
+                validateStock(warehouse.getId(), product.getId(), quantity);
+
+                List<ImportBatch> batches = importBatchRepository
+                        .findByProductAndWarehouseOrderByImportDateAsc(product, warehouse);
+
+                int totalExportQuantity = quantity;
+                for (ImportBatch batch : batches) {
+                    int available = batch.getQuantityRemaining();
+                    if (available <= 0) continue;
+
+                    int deducted = Math.min(available, totalExportQuantity);
+                    batch.setQuantityRemaining(available - deducted);
+                    importBatchRepository.save(batch);
+
+                    TransactionBatch tb = new TransactionBatch();
+                    tb.setWarehouseTransaction(wt);
+                    tb.setImportBatch(batch);
+                    tb.setQuantityDeducted(deducted);
+                    transactionBatchRepository.save(tb);
+
+                    totalCost += deducted * batch.getUnitCost();
+                    totalExportQuantity -= deducted;
+                }
+
+                wp.setQuantity(wp.getQuantity() - quantity);
+                warehouseProductRepository.save(wp);
+
+                product.setQuantity(product.getQuantity() - quantity);
+                productRepository.save(product);
             }
         }
-        return mapToDto(warehouseTransactionRepository.save(entity));
-    }
 
-    public void updateStock(long warehouseId, long productId, int quantityChange) {
-        WarehouseProduct wp = warehouseProductRepository.findByWarehouseIdAndProductId(warehouseId, productId);
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(productId)));
+        if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành"))) {
+            double profit = totalRevenue - totalCost;
+            order.setProfitMoney(profit);
+            orderRepository.save(order);
+        }
 
-        wp.setQuantity(wp.getQuantity() + quantityChange);
-        product.setQuantity(product.getQuantity() + quantityChange);
-
-        warehouseProductRepository.save(wp);
-        productRepository.save(product);
+        return mapToDto(savedWt);
     }
 
     public void validateStock(long warehouseId, long productId, int requiredQuantity) {
@@ -122,48 +167,131 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
     @Override
     @Transactional
     public WarehouseTransactionDto updateWarehouseTransaction(long id, WarehouseTransactionDto dto) {
-        WarehouseTransaction warehouseTransaction = warehouseTransactionRepository.findById(id)
+        WarehouseTransaction wt = warehouseTransactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse transaction", "id", String.valueOf(id)));
-
         Order order = orderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", String.valueOf(dto.getOrderId())));
-
-        Status status = statusRepository.findById(dto.getStatusId())
+        Status newStatus = statusRepository.findById(dto.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", String.valueOf(dto.getStatusId())));
-
         WarehouseTransactionType type = warehouseTransactionTypeRepository.findById(dto.getTransactionTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction Type", "id", String.valueOf(dto.getTransactionTypeId())));
+        Warehouse warehouse = warehouseRepository.findById(dto.getWarehouseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse", "id", String.valueOf(dto.getWarehouseId())));
 
-        long warehouseId = dto.getWarehouseId();
-        List<OrderDetail> orderDetails = order.getOrderDetails().stream().toList();
+        String oldStatusName = wt.getStatus().getName();
+        String newStatusName = newStatus.getName();
 
         boolean isImport = type.getName().equalsIgnoreCase("Nhập");
         boolean isExport = type.getName().equalsIgnoreCase("Xuất");
-        String statusName = status.getName();
 
-        for (OrderDetail detail : orderDetails) {
-            long productId = detail.getProduct().getId();
+        double totalRevenue = order.getTotalMoney();
+        double totalCost = 0;
+
+        for (OrderDetail detail : order.getOrderDetails()) {
+            Product product = productRepository.findById(detail.getProduct().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product", "id", String.valueOf(detail.getProduct().getId())));
             int quantity = detail.getQuantity();
 
-            if (isImport && statusName.equalsIgnoreCase("Đã hoàn thành")) {
-                updateStock(warehouseId, productId, quantity);
+            WarehouseProduct wp = warehouseProductRepository.findByWarehouseIdAndProductId(warehouse.getId(), product.getId());
+
+            // NHẬP: Đang xử lý -> Đã hoàn thành
+            if (isImport && oldStatusName.equalsIgnoreCase("Đang xử lý") && newStatusName.equalsIgnoreCase("Đã hoàn thành")) {
+                double unitCost = detail.getUnit_price();
+
+                ImportBatch batch = importBatchRepository.findByProductAndWarehouseAndUnitCost(product, warehouse, unitCost);
+                if (batch != null) {
+                    batch.setQuantityRemaining(batch.getQuantityRemaining() + quantity);
+                } else {
+                    batch = new ImportBatch();
+                    batch.setProduct(product);
+                    batch.setWarehouse(warehouse);
+                    batch.setUnitCost(unitCost);
+                    batch.setQuantityRemaining(quantity);
+                }
+                importBatchRepository.save(batch);
+
+                wp.setQuantity(wp.getQuantity() + quantity);
+                warehouseProductRepository.save(wp);
+                product.setQuantity(product.getQuantity() + quantity);
+                productRepository.save(product);
             }
-            if (isExport && (statusName.equalsIgnoreCase("Đã hoàn thành") ||
-                    statusName.equalsIgnoreCase("Đang xử lý"))) {
-                validateStock(warehouseId, productId, quantity);
-                updateStock(warehouseId, productId, -quantity);
+
+            // XUẤT: Đang xử lý -> Không thành công
+            if (isExport && oldStatusName.equalsIgnoreCase("Đang xử lý") && newStatusName.equalsIgnoreCase("Không thành công")) {
+                List<TransactionBatch> usedBatches = transactionBatchRepository.findByWarehouseTransaction(wt);
+                for (TransactionBatch tb : usedBatches) {
+                    ImportBatch batch = tb.getImportBatch();
+                    batch.setQuantityRemaining(batch.getQuantityRemaining() + tb.getQuantityDeducted());
+                    importBatchRepository.save(batch);
+                }
+                transactionBatchRepository.deleteAll(usedBatches);
+
+                wp.setQuantity(wp.getQuantity() + quantity);
+                warehouseProductRepository.save(wp);
+                product.setQuantity(product.getQuantity() + quantity);
+                productRepository.save(product);
             }
-            if (isExport && statusName.equalsIgnoreCase("Không thành công")) {
-                updateStock(warehouseId, productId, quantity);
+
+            // XUẤT: Không thành công -> Đã hoàn thành hoặc Đang xử lý
+            if (isExport && oldStatusName.equalsIgnoreCase("Không thành công")
+                    && (newStatusName.equalsIgnoreCase("Đã hoàn thành") || newStatusName.equalsIgnoreCase("Đang xử lý"))) {
+                validateStock(warehouse.getId(), product.getId(), quantity);
+
+                List<ImportBatch> batches = importBatchRepository
+                        .findByProductAndWarehouseOrderByImportDateAsc(product, warehouse);
+                int totalExportQuantity = quantity;
+                for (ImportBatch batch : batches) {
+                    int available = batch.getQuantityRemaining();
+                    if (available <= 0) continue;
+                    int deducted = Math.min(available, totalExportQuantity);
+                    batch.setQuantityRemaining(available - deducted);
+                    importBatchRepository.save(batch);
+
+                    TransactionBatch tb = new TransactionBatch();
+                    tb.setWarehouseTransaction(wt);
+                    tb.setImportBatch(batch);
+                    tb.setQuantityDeducted(deducted);
+                    transactionBatchRepository.save(tb);
+
+                    totalCost += deducted * batch.getUnitCost();
+                    totalExportQuantity -= deducted;
+                }
+
+                wp.setQuantity(wp.getQuantity() - quantity);
+                warehouseProductRepository.save(wp);
+                product.setQuantity(product.getQuantity() - quantity);
+                productRepository.save(product);
             }
         }
-        warehouseTransaction.setStatus(status);
-        warehouseTransaction.setCreatedBy(dto.getCreatedBy());
-        warehouseTransaction.setParticipant(dto.getParticipant());
-        warehouseTransaction.setStorekeeper(dto.getStorekeeper());
-        warehouseTransaction.setAccountant(dto.getAccountant());
 
-        return mapToDto(warehouseTransactionRepository.save(warehouseTransaction));
+        // XUẤT: Đang xử lý -> Đã hoàn thành
+        if (isExport && oldStatusName.equalsIgnoreCase("Đang xử lý") && newStatusName.equalsIgnoreCase("Đã hoàn thành")) {
+            // Tính totalCost từ TransactionBatch đã có
+            totalCost = transactionBatchRepository.findByWarehouseTransaction(wt)
+                    .stream()
+                    .mapToDouble(tb -> tb.getQuantityDeducted() * tb.getImportBatch().getUnitCost())
+                    .sum();
+        }
+
+        // Xử lý profit cho đơn xuất
+        if (isExport) {
+            if (newStatusName.equalsIgnoreCase("Không thành công")) {
+                order.setProfitMoney(0);
+            } else if (newStatusName.equalsIgnoreCase("Đã hoàn thành") || newStatusName.equalsIgnoreCase("Đang xử lý")) {
+                // Tính lại profit dựa trên totalRevenue và totalCost
+                double profit = totalRevenue - totalCost;
+                order.setProfitMoney(profit);
+            }
+            orderRepository.save(order);
+        }
+
+        wt.setStatus(newStatus);
+        wt.setCreatedBy(dto.getCreatedBy());
+        wt.setParticipant(dto.getParticipant());
+        wt.setStorekeeper(dto.getStorekeeper());
+        wt.setAccountant(dto.getAccountant());
+
+        return mapToDto(warehouseTransactionRepository.save(wt));
     }
 
     @Override
