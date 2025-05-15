@@ -137,6 +137,8 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
             if (orderDetail != null) {
                 orderDetail.setQuantity(dto.getQuantity());
+                orderDetail.setUnit_price(dto.getUnit_price());
+                orderDetail.setExpireDate(dto.getExpireDate());
             } else {
                 orderDetail = mapToEntity(dto);
                 orderDetail.setOrder(order);

@@ -66,7 +66,7 @@ public class ImportBatchServiceImpl implements GenericService<ImportBatchDto> {
         Product product = productRepository.findById(importBatchDto.getProductId()).orElseThrow(()
                 -> new ResourceNotFoundException("Product", "id", String.valueOf(importBatchDto.getProductId())));
 
-        importBatch.setQuantityRemaining(importBatchDto.getQuantityRemaining());
+        importBatch.setRemainQuantity(importBatchDto.getQuantityRemaining());
 
         return mapToDto(importBatchRepository.save(importBatch));
     }

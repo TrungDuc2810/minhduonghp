@@ -74,8 +74,8 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
         double totalRevenue = order.getTotalMoney();
         double totalCost = 0;
 
-        boolean isImport = type.getName().equalsIgnoreCase("Nhập");
-        boolean isExport = type.getName().equalsIgnoreCase("Xuất");
+        boolean isImport = type.getName().equalsIgnoreCase("Nhập kho");
+        boolean isExport = type.getName().equalsIgnoreCase("Xuất kho");
         String statusName = status.getName();
 
         for (OrderDetail detail : order.getOrderDetails()) {
@@ -88,17 +88,14 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
             if (isImport && statusName.equalsIgnoreCase("Đã hoàn thành")) {
                 double unitCost = detail.getUnit_price();
 
-                ImportBatch batch = importBatchRepository.findByProductAndWarehouseAndUnitCost(product, warehouse, unitCost);
-
-                if (batch != null) {
-                    batch.setQuantityRemaining(batch.getQuantityRemaining() + quantity);
-                } else {
-                    batch = new ImportBatch();
-                    batch.setProduct(product);
-                    batch.setWarehouse(warehouse);
-                    batch.setUnitCost(unitCost);
-                    batch.setQuantityRemaining(quantity);
-                }
+                ImportBatch batch = new ImportBatch();
+                batch.setProduct(product);
+                batch.setWarehouse(warehouse);
+                batch.setUnitCost(unitCost);
+                batch.setImportQuantity(quantity);
+                batch.setRemainQuantity(quantity);
+                batch.setExpireDate(detail.getExpireDate());
+                batch.setWarehouseTransaction(savedWt);
                 importBatchRepository.save(batch);
 
                 wp.setQuantity(wp.getQuantity() + quantity);
@@ -112,16 +109,15 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                     || statusName.equalsIgnoreCase("Đang xử lý"))) {
                 validateStock(warehouse.getId(), product.getId(), quantity);
 
-                List<ImportBatch> batches = importBatchRepository
-                        .findByProductAndWarehouseOrderByImportDateAsc(product, warehouse);
+                List<ImportBatch> batches = importBatchRepository.findByProductOrderByExpireDateAsc(product);
 
                 int totalExportQuantity = quantity;
                 for (ImportBatch batch : batches) {
-                    int available = batch.getQuantityRemaining();
+                    int available = batch.getRemainQuantity();
                     if (available <= 0) continue;
 
                     int deducted = Math.min(available, totalExportQuantity);
-                    batch.setQuantityRemaining(available - deducted);
+                    batch.setRemainQuantity(available - deducted);
                     importBatchRepository.save(batch);
 
                     TransactionBatch tb = new TransactionBatch();
@@ -181,8 +177,8 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
         String oldStatusName = wt.getStatus().getName();
         String newStatusName = newStatus.getName();
 
-        boolean isImport = type.getName().equalsIgnoreCase("Nhập");
-        boolean isExport = type.getName().equalsIgnoreCase("Xuất");
+        boolean isImport = type.getName().equalsIgnoreCase("Nhập kho");
+        boolean isExport = type.getName().equalsIgnoreCase("Xuất kho");
 
         double totalRevenue = order.getTotalMoney();
         double totalCost = 0;
@@ -198,20 +194,19 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
             if (isImport && oldStatusName.equalsIgnoreCase("Đang xử lý") && newStatusName.equalsIgnoreCase("Đã hoàn thành")) {
                 double unitCost = detail.getUnit_price();
 
-                ImportBatch batch = importBatchRepository.findByProductAndWarehouseAndUnitCost(product, warehouse, unitCost);
-                if (batch != null) {
-                    batch.setQuantityRemaining(batch.getQuantityRemaining() + quantity);
-                } else {
-                    batch = new ImportBatch();
-                    batch.setProduct(product);
-                    batch.setWarehouse(warehouse);
-                    batch.setUnitCost(unitCost);
-                    batch.setQuantityRemaining(quantity);
-                }
+                ImportBatch batch = new ImportBatch();
+                batch.setProduct(product);
+                batch.setWarehouse(warehouse);
+                batch.setUnitCost(unitCost);
+                batch.setImportQuantity(quantity);
+                batch.setRemainQuantity(quantity);
+                batch.setExpireDate(detail.getExpireDate());
+                batch.setWarehouseTransaction(wt);
                 importBatchRepository.save(batch);
 
                 wp.setQuantity(wp.getQuantity() + quantity);
                 warehouseProductRepository.save(wp);
+
                 product.setQuantity(product.getQuantity() + quantity);
                 productRepository.save(product);
             }
@@ -221,7 +216,7 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                 List<TransactionBatch> usedBatches = transactionBatchRepository.findByWarehouseTransaction(wt);
                 for (TransactionBatch tb : usedBatches) {
                     ImportBatch batch = tb.getImportBatch();
-                    batch.setQuantityRemaining(batch.getQuantityRemaining() + tb.getQuantityDeducted());
+                    batch.setRemainQuantity(batch.getRemainQuantity() + tb.getQuantityDeducted());
                     importBatchRepository.save(batch);
                 }
                 transactionBatchRepository.deleteAll(usedBatches);
@@ -238,13 +233,13 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                 validateStock(warehouse.getId(), product.getId(), quantity);
 
                 List<ImportBatch> batches = importBatchRepository
-                        .findByProductAndWarehouseOrderByImportDateAsc(product, warehouse);
+                        .findByProductOrderByExpireDateAsc(product);
                 int totalExportQuantity = quantity;
                 for (ImportBatch batch : batches) {
-                    int available = batch.getQuantityRemaining();
+                    int available = batch.getRemainQuantity();
                     if (available <= 0) continue;
                     int deducted = Math.min(available, totalExportQuantity);
-                    batch.setQuantityRemaining(available - deducted);
+                    batch.setRemainQuantity(available - deducted);
                     importBatchRepository.save(batch);
 
                     TransactionBatch tb = new TransactionBatch();

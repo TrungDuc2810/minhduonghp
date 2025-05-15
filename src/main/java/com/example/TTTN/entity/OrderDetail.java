@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Setter
 @Getter
@@ -20,6 +22,7 @@ public class OrderDetail {
     private int quantity;
     @Column(name = "unit_price")
     private double unit_price;
+    private LocalDateTime expireDate;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
