@@ -5,14 +5,8 @@ import com.example.TTTN.payload.PostDto;
 import com.example.TTTN.service.PostService;
 import com.example.TTTN.utils.AppConstants;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -24,35 +18,34 @@ public class PostController {
     }
 
 //    @PreAuthorize("hasRole('ADMIN_KD')")
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<PostDto> createPost(@RequestPart("post") PostDto postDto,
-                                              @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
+    @PostMapping
+    public ResponseEntity<?> createPost(@RequestBody PostDto postDto) {
         try {
-            if (thumbnail != null && !thumbnail.isEmpty()) {
-                String thumbnailPath = uploadThumbnail(thumbnail);
-                postDto.setThumbnail(thumbnailPath);
-            }
-            return new ResponseEntity<>(postService.createPost(postDto), HttpStatus.CREATED);
+            PostDto createdPost = postService.createPost(postDto);
+            return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(
+                    "Không thể tạo bài đăng: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
-    public String uploadThumbnail(MultipartFile file) throws IOException {
-        String uploadDir = "D://OneDrive//frontend//public//";
-        File uploadDirFile = new File(uploadDir);
-        if (!uploadDirFile.exists()) {
-            uploadDirFile.mkdirs();
-        }
-
-        String fileName = file.getOriginalFilename();
-        String filePath = uploadDir + fileName;
-
-        File destinationFile = new File(filePath);
-        file.transferTo(destinationFile);
-
-        return fileName;
-    }
+//    public String uploadThumbnail(MultipartFile file) throws IOException {
+//        String uploadDir = "D://OneDrive//frontend//public//";
+//        File uploadDirFile = new File(uploadDir);
+//        if (!uploadDirFile.exists()) {
+//            uploadDirFile.mkdirs();
+//        }
+//
+//        String fileName = file.getOriginalFilename();
+//        String filePath = uploadDir + fileName;
+//
+//        File destinationFile = new File(filePath);
+//        file.transferTo(destinationFile);
+//
+//        return fileName;
+//    }
 
     @GetMapping
     public ListResponse<PostDto> getAllPosts(
@@ -70,20 +63,16 @@ public class PostController {
     }
 
 //    @PreAuthorize("hasRole('ADMIN_KD')")
-    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<PostDto> updatePost(
-            @PathVariable(name = "id") long postId,
-            @RequestPart("post") PostDto postDto,
-            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
-    ) {
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePost(@PathVariable(name = "id") long postId, @RequestBody PostDto postDto) {
         try {
-            if (thumbnail != null && !thumbnail.isEmpty()) {
-                postDto.setThumbnail(uploadThumbnail(thumbnail));
-            }
             PostDto updatedPost = postService.updatePost(postId, postDto);
             return new ResponseEntity<>(updatedPost, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(
+                    "Không thể cập nhật bài đăng: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
