@@ -20,8 +20,6 @@ public class Product {
     private String description;
     @Column(name = "export_price", nullable = false)
     private double exportPrice;
-    @Column(name = "price", nullable = false)
-    private double price;
     @Column(name = "quantity", nullable = false)
     private int quantity;
     @Column(name = "thumbnail")
