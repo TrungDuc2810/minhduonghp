@@ -11,7 +11,9 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
 
+@Service
 public class TransactionBatchServiceImpl implements GenericService<TransactionBatchDto> {
     private final TransactionBatchRepository transactionBatchRepository;
     private final ModelMapper modelMapper;

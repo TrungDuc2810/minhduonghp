@@ -14,11 +14,11 @@ public class TransactionBatch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_transaction_id")
     private WarehouseTransaction warehouseTransaction;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "import_batch_id")
     private ImportBatch importBatch;
 
