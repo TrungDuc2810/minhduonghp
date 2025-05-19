@@ -2,6 +2,7 @@ package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.*;
 import com.example.TTTN.exception.ResourceNotFoundException;
+import com.example.TTTN.exception.WebAPIException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
 import com.example.TTTN.repository.*;
@@ -12,6 +13,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -50,6 +52,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDto addProduct(ProductDto productDto) {
+        if (productRepository.existsByName(productDto.getName())) {
+            throw new WebAPIException(HttpStatus.BAD_REQUEST, "Sản phẩm đã tồn tại!!!");
+        }
+
         Product product = mapToEntity(productDto);
         product = productRepository.save(product);
 

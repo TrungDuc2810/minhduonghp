@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/roles")
 public class RoleController extends GenericController<RoleDto> {
-
     public RoleController(GenericService<RoleDto> service) {
         super(service);
     }

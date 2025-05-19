@@ -70,6 +70,7 @@ public class UserServiceImpl implements UserService {
         Role role = roleRepository.findById(userDto.getRoleId()).orElseThrow(()
                 -> new ResourceNotFoundException("Role", "id", String.valueOf(userDto.getRoleId())));
 
+        user.setUsername(userDto.getUsername());
         user.setRole(role);
 
         return mapToDto(userRepository.save(user));
