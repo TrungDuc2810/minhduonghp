@@ -19,7 +19,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                         "SUM(o.total_money) AS revenue, " +
                         "SUM(o.profit_money) AS profit " +
                         "FROM orders o " +
-                        "WHERE o.order_status_id IN (2, 3) " +
+                        "WHERE o.order_status_id IN (1, 2, 3) " +
+                        "AND o.order_type_id = 2 " +
                         "AND YEAR(STR_TO_DATE(o.created_at, '%Y-%m-%d')) = :year " +
                         "GROUP BY " +
                         "YEAR(STR_TO_DATE(o.created_at, '%Y-%m-%d')), " +
@@ -34,7 +35,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                         "SUM(o.total_money) as revenue, " +
                         "SUM(o.profit_money) as profit " +
                         "FROM orders o " +
-                        "WHERE o.order_status_id IN (2, 3) " +
+                        "WHERE o.order_status_id IN (1,2, 3) " +
+                        "AND o.order_type_id = 2 " +
                         "AND YEAR(STR_TO_DATE(o.created_at, '%Y-%m-%d')) = :year " +
                         "GROUP BY YEAR(STR_TO_DATE(o.created_at, '%Y-%m-%d')), " +
                         "QUARTER(STR_TO_DATE(o.created_at, '%Y-%m-%d')) " +
@@ -46,7 +48,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                         "SUM(o.total_money) as revenue, " +
                         "SUM(o.profit_money) as profit " +
                         "FROM orders o " +
-                        "WHERE o.order_status_id IN (2, 3) " +
+                        "WHERE o.order_status_id IN (1, 2, 3) " +
+                        "AND o.order_type_id = 2 " +
                         "GROUP BY YEAR(STR_TO_DATE(o.created_at, '%Y-%m-%d')) " +
                         "ORDER BY YEAR(STR_TO_DATE(o.created_at, '%Y-%m-%d')) DESC", nativeQuery = true)
         List<Object[]> findRevenueByYear();
