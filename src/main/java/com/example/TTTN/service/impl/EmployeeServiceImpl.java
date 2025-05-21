@@ -2,6 +2,7 @@ package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.Employee;
 import com.example.TTTN.exception.ResourceNotFoundException;
+import com.example.TTTN.exception.WebAPIException;
 import com.example.TTTN.payload.EmployeeDto;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.repository.EmployeeRepository;
@@ -11,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -49,6 +51,10 @@ public class EmployeeServiceImpl implements GenericService<EmployeeDto> {
     @Override
     @Transactional
     public EmployeeDto create(EmployeeDto employeeDto) {
+        if (employeeRepository.existsByPhoneNumber(employeeDto.getPhoneNumber())) {
+            throw new WebAPIException(HttpStatus.BAD_REQUEST, "Số điện thoại nhân viên đã tồn tại!!!");
+        }
+
         Employee employee = mapToEntity(employeeDto);
         return mapToDto(employeeRepository.save(employee));
     }
@@ -58,6 +64,10 @@ public class EmployeeServiceImpl implements GenericService<EmployeeDto> {
     public EmployeeDto update(long id, EmployeeDto employeeDto) {
         Employee employee = employeeRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Employee", "id", String.valueOf(id)));
+
+        if (employeeRepository.existsByPhoneNumber(employeeDto.getPhoneNumber())) {
+            throw new WebAPIException(HttpStatus.BAD_REQUEST, "Số điện thoại nhân viên đã tồn tại!!!");
+        }
 
         employee.setFullname(employeeDto.getFullname());
         employee.setPhoneNumber(employeeDto.getPhoneNumber());

@@ -1,5 +1,6 @@
 package com.example.TTTN.controller;
 
+import com.example.TTTN.exception.WebAPIException;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.ProductDto;
 import com.example.TTTN.service.ProductService;
@@ -22,7 +23,10 @@ public class ProductController {
         try {
             ProductDto createdProduct = productService.addProduct(productDto);
             return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
-        } catch (Exception e) {
+        } catch (WebAPIException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
             return new ResponseEntity<>(
                     "Không thể tạo sản phẩm: " + e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR
@@ -65,7 +69,10 @@ public class ProductController {
         try {
             ProductDto updatedProduct = productService.updateProduct(productId, productDto);
             return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (WebAPIException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
             return new ResponseEntity<>(
                     "Không thể cập nhật sản phẩm: " + e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR

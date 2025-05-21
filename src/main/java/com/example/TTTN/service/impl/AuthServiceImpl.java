@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public String register(RegisterDto registerDto) {
         if(userRepository.existsByUsername(registerDto.getUsername())) {
-            throw new WebAPIException(HttpStatus.BAD_REQUEST, "Username is already exists!!!");
+            throw new WebAPIException(HttpStatus.BAD_REQUEST, "Tên đăng nhập đã tồn tại!!!");
         }
 
         User user = new User();
@@ -68,6 +68,6 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        return "User registered successfully!!!";
+        return "Đăng ký thành công!!!";
     }
 }
