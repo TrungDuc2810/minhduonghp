@@ -53,7 +53,7 @@ public class OrderServiceImpl implements OrderService {
                 OrderStatus orderStatus = orderStatusRepository.findByName("Chưa thanh toán");
                 orderDto.setOrderStatusId(orderStatus.getId());
                 orderDto.setPaidMoney(0);
-                orderDto.setProfitMoney(orderDto.getProfitMoney());
+                orderDto.setProfitMoney(0);
 
                 Partner partner = partnerRepository.findById(orderDto.getPartnerId()).orElseThrow(
                                 () -> new ResourceNotFoundException("Partner", "id",
