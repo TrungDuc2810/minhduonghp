@@ -1,5 +1,6 @@
 package com.example.TTTN.controller;
 
+import com.example.TTTN.payload.InvoiceDetailsDto;
 import com.example.TTTN.payload.ListResponse;
 import com.example.TTTN.payload.InvoiceDto;
 import com.example.TTTN.service.InvoiceService;
@@ -39,7 +40,13 @@ public class InvoiceController {
         return new ResponseEntity<>(invoiceService.getInvoiceById(invoiceId), HttpStatus.OK);
     }
 
-//    @PreAuthorize("hasRole('ADMIN_KD')")
+    @GetMapping(value = "/{id}/details")
+    public ResponseEntity<InvoiceDetailsDto> getInvoiceWithDetails(@PathVariable(name = "id") long invoiceId) {
+        return new ResponseEntity<>(invoiceService.getInvoiceDetailsById(invoiceId), HttpStatus.OK);
+    }
+
+
+    //    @PreAuthorize("hasRole('ADMIN_KD')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<InvoiceDto> updateInvoice(@PathVariable(name = "id") long invoiceId,
                                                     @RequestBody InvoiceDto invoiceDto) {

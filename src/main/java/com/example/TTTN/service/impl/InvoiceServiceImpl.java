@@ -2,8 +2,7 @@ package com.example.TTTN.service.impl;
 
 import com.example.TTTN.entity.*;
 import com.example.TTTN.exception.ResourceNotFoundException;
-import com.example.TTTN.payload.ListResponse;
-import com.example.TTTN.payload.InvoiceDto;
+import com.example.TTTN.payload.*;
 import com.example.TTTN.repository.*;
 import com.example.TTTN.service.InvoiceService;
 import jakarta.transaction.Transactional;
@@ -14,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InvoiceServiceImpl implements InvoiceService {
@@ -71,6 +71,65 @@ public class InvoiceServiceImpl implements InvoiceService {
         Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(()
                 -> new ResourceNotFoundException("Invoice", "id", String.valueOf(invoiceId)));
         return mapToDto(invoice);
+    }
+
+    @Override
+    public InvoiceDetailsDto getInvoiceDetailsById(long invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(()
+                -> new ResourceNotFoundException("Invoice", "id", String.valueOf(invoiceId)));
+
+        InvoiceDetailsDto invoiceDetailsDto = new InvoiceDetailsDto();
+        invoiceDetailsDto.setId(invoice.getId());
+        InvoiceTypeDto invoiceTypeDto = modelMapper.map(invoice.getInvoiceType(), InvoiceTypeDto.class);
+        invoiceDetailsDto.setInvoiceType(invoiceTypeDto);
+        invoiceDetailsDto.setMoneyAmount(invoice.getMoneyAmount());
+        if (invoice.getPaymentType() != null) {
+            invoiceDetailsDto.setPaymentType(invoice.getPaymentType().getLabel());
+        } else {
+            invoiceDetailsDto.setPaymentType("N/A");
+        }
+        invoiceDetailsDto.setCreatedAt(invoice.getCreatedAt());
+
+        // Lấy thông tin đơn hàng
+        if (invoice.getOrder() != null) {
+            Order order = invoice.getOrder();
+            OrderDto orderDto = modelMapper.map(order, OrderDto.class);
+            invoiceDetailsDto.setOrder(orderDto);
+
+            // Lấy thông tin đối tác
+            if (order.getPartner() != null) {
+                Partner partner = order.getPartner();
+                PartnerDto partnerDto = modelMapper.map(partner, PartnerDto.class);
+                invoiceDetailsDto.setPartner(partnerDto);
+            }
+
+            // Lấy chi tiết sản phẩm trong đơn hàng
+            if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+                List<OrderItemDto> items = order.getOrderDetails().stream().map(detail -> {
+                    OrderItemDto itemDto = new OrderItemDto();
+                    itemDto.setProductId(detail.getProduct().getId());
+
+                    // Lấy thông tin sản phẩm
+                    try {
+                        Product product = detail.getProduct();
+                        itemDto.setProductName(product.getName());
+                    } catch (Exception e) {
+                        itemDto.setProductName("Sản phẩm " + detail.getProduct().getId());
+                    }
+
+                    itemDto.setQuantity(detail.getQuantity());
+                    itemDto.setUnitPrice(detail.getUnit_price());
+                    itemDto.setTotal(detail.getQuantity() * detail.getUnit_price());
+
+                    return itemDto;
+                }).collect(Collectors.toList());
+
+                invoiceDetailsDto.setItems(items);
+            }
+        }
+
+        return invoiceDetailsDto;
+
     }
 
     @Override
@@ -143,7 +202,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setInvoiceType(invoiceType);
         invoice.setOrder(order);
 
-        if (invoiceDto.getPaymentType().equalsIgnoreCase("Tiền mặt")) {
+        if (invoiceDto.getPaymentType().equalsIgnoreCase("CASH")) {
             invoice.setPaymentType(PaymentType.CASH);
         } else {
             invoice.setPaymentType(PaymentType.TRANSFER);
