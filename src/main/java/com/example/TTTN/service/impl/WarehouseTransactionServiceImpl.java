@@ -109,13 +109,14 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                     || statusName.equalsIgnoreCase("Đang xử lý"))) {
                 validateStock(warehouse.getId(), product.getId(), quantity);
 
-                List<ImportBatch> batches = importBatchRepository.findByProductOrderByExpireDateAsc(product);
+                List<ImportBatch> batches = importBatchRepository.findByProductAndWarehouseOrderByExpireDateAsc(product, warehouse);
 
                 int totalExportQuantity = quantity;
                 for (ImportBatch batch : batches) {
                     int available = batch.getRemainQuantity();
                     if (available <= 0) continue;
 
+                    if (totalExportQuantity == 0) break;
                     int deducted = Math.min(available, totalExportQuantity);
                     batch.setRemainQuantity(available - deducted);
                     importBatchRepository.save(batch);
@@ -232,12 +233,14 @@ public class WarehouseTransactionServiceImpl implements WarehouseTransactionServ
                     && (newStatusName.equalsIgnoreCase("Đã hoàn thành") || newStatusName.equalsIgnoreCase("Đang xử lý"))) {
                 validateStock(warehouse.getId(), product.getId(), quantity);
 
-                List<ImportBatch> batches = importBatchRepository
-                        .findByProductOrderByExpireDateAsc(product);
+                List<ImportBatch> batches = importBatchRepository.findByProductAndWarehouseOrderByExpireDateAsc(product, warehouse);
+
                 int totalExportQuantity = quantity;
                 for (ImportBatch batch : batches) {
                     int available = batch.getRemainQuantity();
                     if (available <= 0) continue;
+
+                    if (totalExportQuantity == 0) break;
                     int deducted = Math.min(available, totalExportQuantity);
                     batch.setRemainQuantity(available - deducted);
                     importBatchRepository.save(batch);

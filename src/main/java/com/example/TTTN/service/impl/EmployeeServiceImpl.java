@@ -65,10 +65,6 @@ public class EmployeeServiceImpl implements GenericService<EmployeeDto> {
         Employee employee = employeeRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Employee", "id", String.valueOf(id)));
 
-        if (employeeRepository.existsByPhoneNumber(employeeDto.getPhoneNumber())) {
-            throw new WebAPIException(HttpStatus.BAD_REQUEST, "Số điện thoại nhân viên đã tồn tại!!!");
-        }
-
         employee.setFullname(employeeDto.getFullname());
         employee.setPhoneNumber(employeeDto.getPhoneNumber());
         employee.setAddress(employeeDto.getAddress());

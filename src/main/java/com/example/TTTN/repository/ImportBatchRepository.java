@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface ImportBatchRepository extends JpaRepository<ImportBatch, Long> {
     List<ImportBatch> findByProductAndWarehouseOrderByImportDateAsc(Product product, Warehouse warehouse);
-    List<ImportBatch> findByProductOrderByExpireDateAsc(Product product);
+    List<ImportBatch> findByProductAndWarehouseOrderByExpireDateAsc(Product product, Warehouse warehouse);
 }
