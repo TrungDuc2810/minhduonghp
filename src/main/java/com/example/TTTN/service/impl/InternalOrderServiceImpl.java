@@ -60,19 +60,19 @@ public class InternalOrderServiceImpl implements InternalOrderService {
         Product product = productRepository.findById(internalOrderDto.getProductId()).orElseThrow(()
                 -> new ResourceNotFoundException("Product", "id", String.valueOf(internalOrderDto.getProductId())));
 
-        Status status = statusRepository.findByName("Đã hoàn thành");
-        if (internalOrderDto.getStatusId() == status.getId()) {
-            WarehouseProduct sourceProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+        WarehouseProduct sourceProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
                     internalOrderDto.getSourceWarehouseId(), internalOrderDto.getProductId());
-            WarehouseProduct destProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
+        WarehouseProduct destProduct = warehouseProductRepository.findByWarehouseIdAndProductId(
                     internalOrderDto.getDestinationWarehouseId(), internalOrderDto.getProductId());
 
+        Status status = statusRepository.findByName("Đã hoàn thành");
+        if (internalOrderDto.getStatusId() == status.getId()) {
             if (sourceProduct == null || destProduct == null) {
                 throw new ResourceNotFoundException("Warehouse product", "source or destination", "Not found");
             }
 
             if (sourceProduct.getQuantity() < internalOrderDto.getQuantity()) {
-                throw new IllegalArgumentException("Source warehouse does not have enough quantity.");
+                throw new IllegalArgumentException("Kho nguồn không có đủ số lượng.");
             }
 
             sourceProduct.setQuantity(sourceProduct.getQuantity() - internalOrderDto.getQuantity());
@@ -80,6 +80,14 @@ public class InternalOrderServiceImpl implements InternalOrderService {
 
             warehouseProductRepository.save(sourceProduct);
             warehouseProductRepository.save(destProduct);
+        } else {
+            if (sourceProduct == null || destProduct == null) {
+                throw new ResourceNotFoundException("Warehouse product", "source or destination", "Not found");
+            }
+
+            if (sourceProduct.getQuantity() < internalOrderDto.getQuantity()) {
+                throw new IllegalArgumentException("Kho nguồn không có đủ số lượng.");
+            }
         }
 
         return mapToDto(internalOrderRepository.save(internalOrder));
@@ -112,7 +120,7 @@ public class InternalOrderServiceImpl implements InternalOrderService {
             }
 
             if (sourceProduct.getQuantity() < internalOrderDto.getQuantity()) {
-                throw new IllegalArgumentException("Source warehouse does not have enough quantity.");
+                throw new IllegalArgumentException("Kho nguồn không đủ số lượng.");
             }
 
             sourceProduct.setQuantity(sourceProduct.getQuantity() - internalOrderDto.getQuantity());

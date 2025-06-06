@@ -62,7 +62,7 @@ public class InventoryAdjustmentServiceImpl implements InventoryAdjustmentServic
         }
 
         if (warehouseProduct.getQuantity() < inventoryAdjustmentDto.getQuantity()) {
-            throw new IllegalArgumentException("Warehouse does not have enough quantity.");
+            throw new IllegalArgumentException("Kho không đủ số lượng.");
         }
 
         warehouseProduct.setQuantity(warehouseProduct.getQuantity() - inventoryAdjustmentDto.getQuantity());
@@ -103,7 +103,7 @@ public class InventoryAdjustmentServiceImpl implements InventoryAdjustmentServic
         }
 
         if (newWarehouseProduct.getQuantity() < inventoryAdjustmentDto.getQuantity()) {
-            throw new IllegalArgumentException("Warehouse does not have enough quantity.");
+            throw new IllegalArgumentException("Kho không đủ số lượng.");
         }
 
         oldWarehouseProduct.setQuantity(oldWarehouseProduct.getQuantity() + inventoryAdjustment.getQuantity());
